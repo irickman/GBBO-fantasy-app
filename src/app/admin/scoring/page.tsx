@@ -10,6 +10,13 @@ const OPTIONAL_CATEGORIES = Object.keys(SCORING_CATEGORIES).filter(
   cat => !EVERY_WEEK_CATEGORIES.includes(cat)
 )
 
+// Format category names for display
+const formatCategoryName = (category: string) => {
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
 interface Contestant {
   id: number
   name: string
@@ -188,7 +195,7 @@ export default function AdminScoringPage() {
               {EVERY_WEEK_CATEGORIES.map(category => (
                 <div key={category} className="border border-amber-200 rounded-lg p-4">
                   <h3 className="font-semibold text-amber-800 mb-2">
-                    {category} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points)
+                    {formatCategoryName(category)} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points)
                   </h3>
                   <select
                     value={everyWeekScores[category] || ''}
@@ -217,7 +224,7 @@ export default function AdminScoringPage() {
               {OPTIONAL_CATEGORIES.map(category => (
                 <div key={category} className="border border-amber-200 rounded-lg p-4">
                   <h3 className="font-semibold text-amber-800 mb-2">
-                    {category} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points each)
+                    {formatCategoryName(category)} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points each)
                   </h3>
                   <div className="space-y-2">
                     <select
@@ -272,7 +279,7 @@ export default function AdminScoringPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <div className="font-medium text-amber-900">{score.contestantName}</div>
-                        <div className="text-sm text-amber-600">{score.category}</div>
+                        <div className="text-sm text-amber-600">{formatCategoryName(score.category)}</div>
                       </div>
                       <div className="text-lg font-bold text-amber-800">
                         {score.points} pts
@@ -290,7 +297,7 @@ export default function AdminScoringPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(SCORING_CATEGORIES).map(([category, points]) => (
               <div key={category} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <div className="font-medium text-amber-900">{category}</div>
+                <div className="font-medium text-amber-900">{formatCategoryName(category)}</div>
                 <div className="text-sm text-amber-600">{points} points</div>
               </div>
             ))}
