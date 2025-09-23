@@ -5,7 +5,7 @@ import { addScoreAction, getWeeklyScoresAction, getContestantsAction } from './a
 import { SCORING_CATEGORIES } from '@/lib/db/schema'
 
 // Separate categories into Every Week and Optional
-const EVERY_WEEK_CATEGORIES = ['Star Baker', 'Technical Win', 'Last in Technical']
+const EVERY_WEEK_CATEGORIES = ['star_baker', 'technical_win', 'last_technical']
 const OPTIONAL_CATEGORIES = Object.keys(SCORING_CATEGORIES).filter(
   cat => !EVERY_WEEK_CATEGORIES.includes(cat)
 )
