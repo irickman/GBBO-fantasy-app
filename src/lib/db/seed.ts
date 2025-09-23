@@ -3,27 +3,27 @@ import { players, contestants, teams } from './schema'
 
 // Sample GBBO contestants (you can replace these with actual contestants)
 const SAMPLE_CONTESTANTS = [
-  'Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry',
-  'Ivy', 'Jack', 'Kate', 'Liam', 'Maya', 'Noah', 'Olivia'
+  'Tom', 'Jessika', 'Jasmine', 'Nataliia', 'Lesley', 'Iain',
+  'Toby', 'Aaron', 'Pui Man', 'Nadia', 'Leighton'
 ]
 
 // Sample players (you can replace these with actual player names)
 const SAMPLE_PLAYERS = [
-  { name: 'Player 1', teamName: 'The Rising Stars' },
-  { name: 'Player 2', teamName: 'Baking Champions' },
-  { name: 'Player 3', teamName: 'Sweet Dreams' },
-  { name: 'Player 4', teamName: 'Flour Power' },
-  { name: 'Player 5', teamName: 'Cake Masters' },
-  { name: 'Player 6', teamName: 'Dough Believers' },
-  { name: 'Player 7', teamName: 'Sugar Rush' },
-  { name: 'Player 8', teamName: 'Bread Winners' },
-  { name: 'Player 9', teamName: 'Pastry Perfect' },
-  { name: 'Player 10', teamName: 'Crust Crusaders' },
-  { name: 'Player 11', teamName: 'Muffin Tops' },
-  { name: 'Player 12', teamName: 'Scone Zone' },
-  { name: 'Player 13', teamName: 'Tart Attack' },
-  { name: 'Player 14', teamName: 'Pie in the Sky' },
-  { name: 'Player 15', teamName: 'Biscuit Brigade' },
+  { name: 'Christine', teamName: 'The Rising Stars' },
+  { name: 'Ruby', teamName: 'Baking Champions' },
+  { name: 'Anna', teamName: 'Sweet Dreams' },
+  { name: 'Dani', teamName: 'Flour Power' },
+  { name: 'Ira', teamName: 'Cake Masters' },
+  { name: 'Jake', teamName: 'Dough Believers' },
+  { name: 'Jeremy', teamName: 'Sugar Rush' },
+  { name: 'Bob', teamName: 'Bread Winners' },
+  { name: 'Alex', teamName: 'Pastry Perfect' },
+  { name: 'Ben', teamName: 'Crust Crusaders' },
+  { name: 'Emma', teamName: 'Muffin Tops' },
+  { name: 'Whiting', teamName: 'Scone Zone' },
+  { name: 'Aleta', teamName: 'Tart Attack' },
+  { name: 'Annie', teamName: 'Pie in the Sky' },
+  { name: 'Maria', teamName: 'Biscuit Brigade' },
 ]
 
 export async function seedDatabase() {
