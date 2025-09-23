@@ -26,9 +26,20 @@ interface WeeklyScore {
   points: number
 }
 
+interface Team {
+  teamId: number
+  playerId: number
+  playerName: string
+  teamName: string
+  contestantId: number
+  contestantName: string
+  eliminatedWeek?: number
+}
+
 export default function DashboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [week3Scores, setWeek3Scores] = useState<WeeklyScore[]>([])
+  const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null)
@@ -57,9 +68,10 @@ export default function DashboardPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [leaderboardRes, week3Res] = await Promise.all([
+      const [leaderboardRes, week3Res, teamsRes] = await Promise.all([
         fetch('/api/leaderboard').then(r => r.json()),
-        fetch('/api/weekly-scores/3').then(r => r.json())
+        fetch('/api/weekly-scores/3').then(r => r.json()),
+        fetch('/api/db/test').then(r => r.json()).then(d => d.teams || [])
       ])
       
       if (leaderboardRes.leaderboard) {
@@ -68,6 +80,10 @@ export default function DashboardPage() {
       
       if (week3Res.scores) {
         setWeek3Scores(week3Res.scores)
+      }
+      
+      if (teamsRes) {
+        setTeams(teamsRes)
       }
     } catch (err) {
       setError('Failed to load data')
@@ -101,6 +117,16 @@ export default function DashboardPage() {
       setExpandedPlayer(playerId)
       await loadPlayerDetails(playerId)
     }
+  }
+
+  const getPlayerContestants = (playerId: number) => {
+    return teams
+      .filter(team => team.playerId === playerId)
+      .map(team => ({
+        id: team.contestantId,
+        name: team.contestantName,
+        eliminatedWeek: team.eliminatedWeek
+      }))
   }
 
   if (loading) {
@@ -203,32 +229,55 @@ export default function DashboardPage() {
                     
                     {expandedPlayer === entry.playerId && (
                       <div className="border-t border-amber-200 bg-amber-50 p-4">
-                        <h4 className="font-semibold text-amber-900 mb-3">Contestants & Weekly Breakdown</h4>
+                        <h4 className="font-semibold text-amber-900 mb-3">Team Details</h4>
                         {playerDetails[entry.playerId] ? (
-                          <div className="space-y-2">
-                            {Object.entries(
-                              playerDetails[entry.playerId].reduce((acc: any, score: any) => {
-                                if (!acc[score.week]) acc[score.week] = []
-                                acc[score.week].push(score)
-                                return acc
-                              }, {})
-                            ).map(([week, scores]: [string, any]) => (
-                              <div key={week} className="bg-white rounded p-2">
-                                <div className="font-medium text-amber-800 mb-1">Week {week}</div>
-                                <div className="space-y-1">
-                                  {scores.map((score: any, idx: number) => (
-                                    <div key={idx} className="flex justify-between text-sm">
-                                      <span className="text-amber-700">
-                                        {score.contestantName} - {formatCategoryName(score.category)}
-                                      </span>
-                                      <span className="font-medium text-amber-800">
-                                        {score.points} pts
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
+                          <div className="space-y-4">
+                            {/* Contestants Section */}
+                            <div>
+                              <h5 className="font-medium text-amber-800 mb-2">Contestants</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                {getPlayerContestants(entry.playerId).map(contestant => (
+                                  <div key={contestant.id} className="bg-white border border-amber-200 rounded p-2">
+                                    <div className="font-medium text-amber-800">{contestant.name}</div>
+                                    {contestant.eliminatedWeek && (
+                                      <div className="text-xs text-red-600">
+                                        Eliminated Week {contestant.eliminatedWeek}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            </div>
+                            
+                            {/* Weekly Breakdown Section */}
+                            <div>
+                              <h5 className="font-medium text-amber-800 mb-2">Weekly Breakdown</h5>
+                              <div className="space-y-2">
+                                {Object.entries(
+                                  playerDetails[entry.playerId].reduce((acc: any, score: any) => {
+                                    if (!acc[score.week]) acc[score.week] = []
+                                    acc[score.week].push(score)
+                                    return acc
+                                  }, {})
+                                ).map(([week, scores]: [string, any]) => (
+                                  <div key={week} className="bg-white rounded p-2">
+                                    <div className="font-medium text-amber-800 mb-1">Week {week}</div>
+                                    <div className="space-y-1">
+                                      {scores.map((score: any, idx: number) => (
+                                        <div key={idx} className="flex justify-between text-sm">
+                                          <span className="text-amber-700">
+                                            {score.contestantName} - {formatCategoryName(score.category)}
+                                          </span>
+                                          <span className="font-medium text-amber-800">
+                                            {score.points} pts
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="text-amber-600">Loading details...</div>
