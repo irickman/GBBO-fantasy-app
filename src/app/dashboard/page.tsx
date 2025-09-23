@@ -1,5 +1,6 @@
 import { authGuard } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const isAuthenticated = await authGuard()
@@ -33,9 +34,15 @@ export default async function DashboardPage() {
             
             <div className="bg-amber-50 p-6 rounded-lg border border-amber-200">
               <h2 className="text-xl font-semibold text-amber-800 mb-2">
-                Manage Teams
+                Manage Contestants
               </h2>
-              <p className="text-amber-600">Upload contestants & assign teams</p>
+              <p className="text-amber-600 mb-3">Upload contestants & assign teams</p>
+              <Link
+                className="inline-block bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+                href="/admin/contestants"
+              >
+                Open
+              </Link>
             </div>
           </div>
           
