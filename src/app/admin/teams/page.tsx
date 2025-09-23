@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// Format category names for display
+const formatCategoryName = (category: string) => {
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
 interface Player {
   id: number
   name: string
@@ -169,9 +176,9 @@ export default function AdminTeamsPage() {
                             <div className="space-y-1">
                               {scores.map((score: any, idx: number) => (
                                 <div key={idx} className="flex justify-between text-sm">
-                                  <span className="text-amber-700">
-                                    {score.contestantName} - {score.category}
-                                  </span>
+                                      <span className="text-amber-700">
+                                        {score.contestantName} - {formatCategoryName(score.category)}
+                                      </span>
                                   <span className="font-medium text-amber-800">
                                     {score.points} pts
                                   </span>

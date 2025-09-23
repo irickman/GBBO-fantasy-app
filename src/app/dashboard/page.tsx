@@ -3,6 +3,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
+// Format category names for display
+const formatCategoryName = (category: string) => {
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
 interface LeaderboardEntry {
   playerId: number
   playerName: string
@@ -165,7 +172,7 @@ export default function DashboardPage() {
                                   {scores.map((score: any, idx: number) => (
                                     <div key={idx} className="flex justify-between text-sm">
                                       <span className="text-amber-700">
-                                        {score.contestantName} - {score.category}
+                                        {score.contestantName} - {formatCategoryName(score.category)}
                                       </span>
                                       <span className="font-medium text-amber-800">
                                         {score.points} pts
@@ -200,7 +207,7 @@ export default function DashboardPage() {
                     <div className="flex justify-between items-center">
                       <div>
                         <div className="font-medium text-amber-900">{score.contestantName}</div>
-                        <div className="text-sm text-amber-600">{score.category}</div>
+                        <div className="text-sm text-amber-600">{formatCategoryName(score.category)}</div>
                       </div>
                       <div className="text-lg font-bold text-amber-800">
                         {score.points} pts

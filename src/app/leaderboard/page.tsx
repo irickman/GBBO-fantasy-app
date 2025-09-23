@@ -5,6 +5,13 @@ import Link from 'next/link'
 import { authGuard } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
+// Format category names for display
+const formatCategoryName = (category: string) => {
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
 interface LeaderboardEntry {
   playerId: number
   playerName: string
@@ -169,7 +176,7 @@ export default function LeaderboardPage() {
                       {scores.map((score, index) => (
                         <div key={index} className="flex justify-between text-sm">
                           <span className="text-amber-700">
-                            {score.contestantName} - {score.category}
+                            {score.contestantName} - {formatCategoryName(score.category)}
                           </span>
                           <span className="font-medium text-amber-800">
                             {score.points} pts
