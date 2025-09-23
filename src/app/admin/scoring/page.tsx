@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import { addScoreAction, getWeeklyScoresAction, getContestantsAction } from './actions'
 import { SCORING_CATEGORIES } from '@/lib/db/schema'
 
+// Separate categories into Every Week and Optional
+const EVERY_WEEK_CATEGORIES = ['Star Baker', 'Technical Win', 'Last in Technical']
+const OPTIONAL_CATEGORIES = Object.keys(SCORING_CATEGORIES).filter(
+  cat => !EVERY_WEEK_CATEGORIES.includes(cat)
+)
+
 interface Contestant {
   id: number
   name: string
@@ -26,6 +32,12 @@ export default function AdminScoringPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  
+  // Form state for Every Week categories
+  const [everyWeekScores, setEveryWeekScores] = useState<Record<string, number>>({})
+  
+  // Form state for Optional categories
+  const [optionalScores, setOptionalScores] = useState<Record<string, number[]>>({})
 
   // Load data
   useEffect(() => {
@@ -55,17 +67,53 @@ export default function AdminScoringPage() {
     }
   }
 
-  const handleAddScore = async (formData: FormData) => {
-    const result = await addScoreAction(formData)
-    if (result.ok) {
-      setSuccess('Score added successfully!')
+  const handleSaveScores = async () => {
+    try {
       setError('')
+      setSuccess('')
+      
+      // Save Every Week categories
+      for (const [category, contestantId] of Object.entries(everyWeekScores)) {
+        if (contestantId) {
+          const formData = new FormData()
+          formData.append('week', currentWeek.toString())
+          formData.append('category', category)
+          formData.append('contestantId', contestantId.toString())
+          
+          const result = await addScoreAction(formData)
+          if (!result.ok) {
+            setError(result.error || 'Failed to save scores')
+            return
+          }
+        }
+      }
+      
+      // Save Optional categories
+      for (const [category, contestantIds] of Object.entries(optionalScores)) {
+        for (const contestantId of contestantIds) {
+          const formData = new FormData()
+          formData.append('week', currentWeek.toString())
+          formData.append('category', category)
+          formData.append('contestantId', contestantId.toString())
+          
+          const result = await addScoreAction(formData)
+          if (!result.ok) {
+            setError(result.error || 'Failed to save scores')
+            return
+          }
+        }
+      }
+      
+      setSuccess('Scores saved successfully!')
       await loadData()
+      // Clear form
+      setEveryWeekScores({})
+      setOptionalScores({})
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000)
-    } else {
-      setError(result.error || 'Failed to add score')
-      setSuccess('')
+    } catch (err) {
+      setError('Failed to save scores')
+      console.error('handleSaveScores error', err)
     }
   }
 
@@ -132,63 +180,82 @@ export default function AdminScoringPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Add Score Form */}
+        <div className="space-y-8">
+          {/* Every Week Categories */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold text-amber-900 mb-4">Add Score</h2>
-            <form action={handleAddScore} className="space-y-4">
-              <input type="hidden" name="week" value={currentWeek} />
-              
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-amber-700 mb-1">
-                  Category
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  required
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="">Select a category...</option>
-                  {Object.entries(SCORING_CATEGORIES).map(([category, points]) => (
-                    <option 
-                      key={category} 
-                      value={category}
-                      disabled={getScoredCategories().includes(category)}
-                    >
-                      {category} ({points} points) {getScoredCategories().includes(category) ? '✓' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label htmlFor="contestantId" className="block text-sm font-medium text-amber-700 mb-1">
-                  Contestant
-                </label>
-                <select
-                  id="contestantId"
-                  name="contestantId"
-                  required
-                  className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="">Select a contestant...</option>
-                  {contestants.map(contestant => (
-                    <option key={contestant.id} value={contestant.id}>
-                      {contestant.name} {contestant.eliminatedWeek ? `(Eliminated Week ${contestant.eliminatedWeek})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-amber-600 text-white py-2 px-4 rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                Add Score
-              </button>
-            </form>
+            <h2 className="text-2xl font-semibold text-amber-900 mb-4">Every Week Categories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {EVERY_WEEK_CATEGORIES.map(category => (
+                <div key={category} className="border border-amber-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-amber-800 mb-2">
+                    {category} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points)
+                  </h3>
+                  <select
+                    value={everyWeekScores[category] || ''}
+                    onChange={(e) => setEveryWeekScores(prev => ({
+                      ...prev,
+                      [category]: parseInt(e.target.value) || 0
+                    }))}
+                    className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="">Select contestant...</option>
+                    {contestants.map(contestant => (
+                      <option key={contestant.id} value={contestant.id}>
+                        {contestant.name} {contestant.eliminatedWeek ? `(Eliminated Week ${contestant.eliminatedWeek})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Optional Categories */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h2 className="text-2xl font-semibold text-amber-900 mb-4">Optional Categories</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {OPTIONAL_CATEGORIES.map(category => (
+                <div key={category} className="border border-amber-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-amber-800 mb-2">
+                    {category} ({SCORING_CATEGORIES[category as keyof typeof SCORING_CATEGORIES]} points each)
+                  </h3>
+                  <div className="space-y-2">
+                    <select
+                      multiple
+                      value={optionalScores[category] || []}
+                      onChange={(e) => {
+                        const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
+                        setOptionalScores(prev => ({
+                          ...prev,
+                          [category]: selectedIds
+                        }))
+                      }}
+                      className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      size={4}
+                    >
+                      {contestants.map(contestant => (
+                        <option key={contestant.id} value={contestant.id}>
+                          {contestant.name} {contestant.eliminatedWeek ? `(Eliminated Week ${contestant.eliminatedWeek})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-amber-600">Hold Ctrl/Cmd to select multiple contestants</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <button
+              onClick={handleSaveScores}
+              className="w-full bg-amber-600 text-white py-3 px-6 rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 text-lg font-semibold"
+            >
+              Save Week {currentWeek} Scores
+            </button>
+          </div>
+        </div>
 
           {/* Current Week Scores */}
           <div className="bg-white rounded-lg shadow-lg p-6">
@@ -216,7 +283,6 @@ export default function AdminScoringPage() {
               </div>
             )}
           </div>
-        </div>
 
         {/* Scoring Categories Reference */}
         <div className="mt-8 bg-white rounded-lg shadow-lg p-6">

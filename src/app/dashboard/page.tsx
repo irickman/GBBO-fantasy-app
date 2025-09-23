@@ -24,6 +24,8 @@ export default function DashboardPage() {
   const [week3Scores, setWeek3Scores] = useState<WeeklyScore[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null)
+  const [playerDetails, setPlayerDetails] = useState<Record<number, any>>({})
 
   // Load data
   useEffect(() => {
@@ -50,6 +52,32 @@ export default function DashboardPage() {
       console.error('loadData error', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadPlayerDetails = async (playerId: number) => {
+    if (playerDetails[playerId]) return
+    
+    try {
+      const response = await fetch(`/api/leaderboard/${playerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setPlayerDetails(prev => ({
+          ...prev,
+          [playerId]: data.breakdown || []
+        }))
+      }
+    } catch (err) {
+      console.error('loadPlayerDetails error', err)
+    }
+  }
+
+  const togglePlayerExpansion = async (playerId: number) => {
+    if (expandedPlayer === playerId) {
+      setExpandedPlayer(null)
+    } else {
+      setExpandedPlayer(playerId)
+      await loadPlayerDetails(playerId)
     }
   }
 
@@ -89,25 +117,70 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {leaderboard.map((entry, index) => (
-                  <div key={entry.playerId} className="p-4 rounded-lg border-2 border-amber-200">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
-                          index === 0 ? 'bg-yellow-500' : 
-                          index === 1 ? 'bg-gray-400' : 
-                          index === 2 ? 'bg-amber-600' : 'bg-amber-500'
-                        }`}>
-                          {index + 1}
+                  <div key={entry.playerId} className="rounded-lg border-2 border-amber-200 overflow-hidden">
+                    <div 
+                      className="p-4 cursor-pointer hover:bg-amber-50 transition-colors"
+                      onClick={() => togglePlayerExpansion(entry.playerId)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                            index === 0 ? 'bg-yellow-500' : 
+                            index === 1 ? 'bg-gray-400' : 
+                            index === 2 ? 'bg-amber-600' : 'bg-amber-500'
+                          }`}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-amber-900">{entry.playerName}</div>
+                            <div className="text-sm text-amber-600">{entry.teamName}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-semibold text-amber-900">{entry.playerName}</div>
-                          <div className="text-sm text-amber-600">{entry.teamName}</div>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-2xl font-bold text-amber-800">
+                            {entry.totalPoints}
+                          </div>
+                          <div className="text-amber-600">
+                            {expandedPlayer === entry.playerId ? '▼' : '▶'}
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-2xl font-bold text-amber-800">
-                        {entry.totalPoints}
                       </div>
                     </div>
+                    
+                    {expandedPlayer === entry.playerId && (
+                      <div className="border-t border-amber-200 bg-amber-50 p-4">
+                        <h4 className="font-semibold text-amber-900 mb-3">Contestants & Weekly Breakdown</h4>
+                        {playerDetails[entry.playerId] ? (
+                          <div className="space-y-2">
+                            {Object.entries(
+                              playerDetails[entry.playerId].reduce((acc: any, score: any) => {
+                                if (!acc[score.week]) acc[score.week] = []
+                                acc[score.week].push(score)
+                                return acc
+                              }, {})
+                            ).map(([week, scores]: [string, any]) => (
+                              <div key={week} className="bg-white rounded p-2">
+                                <div className="font-medium text-amber-800 mb-1">Week {week}</div>
+                                <div className="space-y-1">
+                                  {scores.map((score: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between text-sm">
+                                      <span className="text-amber-700">
+                                        {score.contestantName} - {score.category}
+                                      </span>
+                                      <span className="font-medium text-amber-800">
+                                        {score.points} pts
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-amber-600">Loading details...</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -160,7 +233,7 @@ export default function DashboardPage() {
               href="/leaderboard"
               className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-md transition-colors text-center"
             >
-              Full Leaderboard
+              History Leaderboard
             </Link>
           </div>
         </div>
