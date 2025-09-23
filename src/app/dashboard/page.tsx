@@ -33,11 +33,26 @@ export default function DashboardPage() {
   const [error, setError] = useState('')
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null)
   const [playerDetails, setPlayerDetails] = useState<Record<number, any>>({})
+  const [showAdminMenu, setShowAdminMenu] = useState(false)
 
   // Load data
   useEffect(() => {
     loadData()
   }, [])
+
+  // Close admin menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showAdminMenu && !(event.target as Element).closest('.admin-menu')) {
+        setShowAdminMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showAdminMenu])
 
   const loadData = async () => {
     try {
@@ -102,10 +117,42 @@ export default function DashboardPage() {
     <main className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-amber-800 mb-2">
-            🧁 GBBO Fantasy League
-          </h1>
-          <p className="text-amber-600">Week 3 Complete • Week 4 Next (September 26th)</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-bold text-amber-800 mb-2">
+                🧁 GBBO Fantasy League
+              </h1>
+              <p className="text-amber-600">Week 3 Complete • Week 4 Next (September 26th)</p>
+            </div>
+            <div className="relative admin-menu">
+              <button
+                onClick={() => setShowAdminMenu(!showAdminMenu)}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+              >
+                ⚙️ Admin
+              </button>
+              {showAdminMenu && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-amber-200 z-10">
+                  <div className="py-1">
+                    <Link
+                      href="/admin/scoring"
+                      className="block px-4 py-2 text-sm text-amber-700 hover:bg-amber-50"
+                      onClick={() => setShowAdminMenu(false)}
+                    >
+                      Enter Week 4 Scores
+                    </Link>
+                    <Link
+                      href="/admin/teams"
+                      className="block px-4 py-2 text-sm text-amber-700 hover:bg-amber-50"
+                      onClick={() => setShowAdminMenu(false)}
+                    >
+                      Manage Teams
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -220,30 +267,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-semibold text-amber-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link
-              href="/admin/scoring"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-md transition-colors text-center"
-            >
-              Enter Week 4 Scores
-            </Link>
-            <Link
-              href="/admin/teams"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-md transition-colors text-center"
-            >
-              Manage Teams
-            </Link>
-            <Link
-              href="/leaderboard"
-              className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-6 rounded-md transition-colors text-center"
-            >
-              History Leaderboard
-            </Link>
-          </div>
-        </div>
 
         {/* Logout */}
         <div className="mt-8 text-center">
