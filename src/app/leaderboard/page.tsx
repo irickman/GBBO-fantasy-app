@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { authGuard } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
@@ -80,8 +81,18 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-amber-900 mb-2">🏆 Leaderboard</h1>
-          <p className="text-amber-700">Current standings and weekly breakdowns</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-bold text-amber-900 mb-2">🏆 Leaderboard</h1>
+              <p className="text-amber-700">Current standings and weekly breakdowns</p>
+            </div>
+            <Link
+              href="/dashboard"
+              className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+            >
+              🏠 Home
+            </Link>
+          </div>
         </div>
 
         {error && (
