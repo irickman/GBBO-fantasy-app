@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { addScoreAction, getWeeklyScoresAction, getContestantsAction, updateScoreAction, deleteScoreAction } from './actions'
-import { SCORING_CATEGORIES } from '@/lib/db/schema'
+import { SCORING_CATEGORIES } from '@/lib/db'
 
 // Separate categories into Every Week and Optional
 const EVERY_WEEK_CATEGORIES = ['star_baker', 'technical_win', 'last_technical']
