@@ -163,3 +163,62 @@ export async function clearAllData() {
 export async function seedDatabase() {
   return await db.seedDefaultData()
 }
+
+// Leaderboard functions
+export async function getLeaderboard() {
+  const players = await getAllPlayers()
+  const seasonTotals = await getSeasonTotals()
+  
+  const leaderboard = players.map(player => {
+    const total = seasonTotals.find(st => st.playerId === player.id)
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      teamName: player.teamName,
+      totalPoints: total ? total.totalPoints : 0
+    }
+  })
+  
+  return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)
+}
+
+export async function getPlayerWeeklyBreakdown(playerId: number) {
+  const playerTeams = await getTeamsByPlayerId(playerId)
+  const contestantIds = playerTeams.map(t => t.contestantId)
+  
+  const allScores = await getWeeklyScores()
+  const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
+  
+  // Group by week
+  const weeklyBreakdown = playerScores.reduce((acc, score) => {
+    if (!acc[score.week]) {
+      acc[score.week] = []
+    }
+    acc[score.week].push(score)
+    return acc
+  }, {} as Record<number, any[]>)
+  
+  return weeklyBreakdown
+}
+
+// Validation functions
+export async function validateWeeklyScoring(week: number, contestantId: number, category: string) {
+  // Check if contestant is eliminated
+  const contestant = await db.getContestantById(contestantId)
+  if (!contestant) return false
+  
+  if (contestant.eliminatedWeek && contestant.eliminatedWeek < week) {
+    return false
+  }
+  
+  // Check for duplicate winners (star_baker, technical_win, last_technical are unique per week)
+  if (['star_baker', 'technical_win', 'last_technical'].includes(category)) {
+    const existingScores = await getWeeklyScores(week)
+    const hasDuplicate = existingScores.some(score => 
+      score.category === category && score.contestantId !== contestantId
+    )
+    if (hasDuplicate) return false
+  }
+  
+  return true
+}
