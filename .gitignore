@@ -86,3 +86,4 @@ jspm_packages/
 # DynamoDB Local files
 .dynamodb/
 
+.vercel
