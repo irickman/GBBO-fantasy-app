@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { addWeeklyScore, getWeeklyScores, validateWeeklyScoring, getAllContestants, updateWeeklyScore, deleteWeeklyScore, getWeeklyScoreById, validateContestantElimination, calculateSeasonTotals } from '@/lib/db/queries'
+import { addWeeklyScore, getWeeklyScores, validateWeeklyScoring, getAllContestants, updateWeeklyScore, deleteWeeklyScore, getWeeklyScoreById, validateContestantElimination, calculateSeasonTotals, getAllPlayers } from '@/lib/db/queries'
 import { SCORING_CATEGORIES } from '@/lib/db/schema'
 
 export async function addScoreAction(formData: FormData) {
@@ -15,21 +15,24 @@ export async function addScoreAction(formData: FormData) {
 
   try {
     // Validate that this category hasn't been scored for this week yet
-    const canScore = await validateWeeklyScoring(week, category)
+    const canScore = await validateWeeklyScoring(week, contestantId, category)
     if (!canScore) {
       return { ok: false, error: `Category "${category}" already has a winner for week ${week}` }
     }
 
     // Validate that contestant is not eliminated before this week
-    const eliminationCheck = await validateContestantElimination(contestantId, week)
-    if (!eliminationCheck.valid) {
-      return { ok: false, error: eliminationCheck.error }
+    const canScoreContestant = await validateContestantElimination(contestantId, week)
+    if (!canScoreContestant) {
+      return { ok: false, error: 'Contestant is eliminated and cannot be scored for this week' }
     }
 
     await addWeeklyScore(week, contestantId, category)
     
-    // Recalculate season totals
-    await calculateSeasonTotals()
+    // Recalculate season totals for all players
+    const players = await getAllPlayers()
+    for (const player of players) {
+      await calculateSeasonTotals(player.id)
+    }
     
     revalidatePath('/admin/scoring')
     revalidatePath('/dashboard')
@@ -90,15 +93,18 @@ export async function updateScoreAction(formData: FormData) {
     }
 
     // Validate that contestant is not eliminated before this week
-    const eliminationCheck = await validateContestantElimination(contestantId, week)
-    if (!eliminationCheck.valid) {
-      return { ok: false, error: eliminationCheck.error }
+    const canScoreContestant = await validateContestantElimination(contestantId, week)
+    if (!canScoreContestant) {
+      return { ok: false, error: 'Contestant is eliminated and cannot be scored for this week' }
     }
 
     await updateWeeklyScore(scoreId, contestantId, category)
     
-    // Recalculate season totals
-    await calculateSeasonTotals()
+    // Recalculate season totals for all players
+    const players = await getAllPlayers()
+    for (const player of players) {
+      await calculateSeasonTotals(player.id)
+    }
     
     revalidatePath('/admin/scoring')
     revalidatePath('/dashboard')
@@ -119,8 +125,11 @@ export async function deleteScoreAction(formData: FormData) {
   try {
     await deleteWeeklyScore(scoreId)
     
-    // Recalculate season totals
-    await calculateSeasonTotals()
+    // Recalculate season totals for all players
+    const players = await getAllPlayers()
+    for (const player of players) {
+      await calculateSeasonTotals(player.id)
+    }
     
     revalidatePath('/admin/scoring')
     revalidatePath('/dashboard')
