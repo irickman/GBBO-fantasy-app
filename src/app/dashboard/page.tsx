@@ -71,7 +71,7 @@ export default function DashboardPage() {
       const [leaderboardRes, week3Res, teamsRes] = await Promise.all([
         fetch('/api/leaderboard').then(r => r.json()),
         fetch('/api/weekly-scores/3').then(r => r.json()),
-        fetch('/api/db/test').then(r => r.json()).then(d => d.teams || [])
+        fetch('/api/teams').then(r => r.json())
       ])
       
       if (leaderboardRes.leaderboard) {
@@ -82,8 +82,8 @@ export default function DashboardPage() {
         setWeek3Scores(week3Res.scores)
       }
       
-      if (teamsRes) {
-        setTeams(teamsRes)
+      if (teamsRes.teams) {
+        setTeams(teamsRes.teams)
       }
     } catch (err) {
       setError('Failed to load data')
@@ -236,16 +236,24 @@ export default function DashboardPage() {
                             <div>
                               <h5 className="font-medium text-amber-800 mb-2">Contestants</h5>
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                                {getPlayerContestants(entry.playerId).map(contestant => (
-                                  <div key={contestant.id} className="bg-white border border-amber-200 rounded p-2">
-                                    <div className="font-medium text-amber-800">{contestant.name}</div>
-                                    {contestant.eliminatedWeek && (
-                                      <div className="text-xs text-red-600">
-                                        Eliminated Week {contestant.eliminatedWeek}
+                                {teams.length > 0 ? (
+                                  getPlayerContestants(entry.playerId).length > 0 ? (
+                                    getPlayerContestants(entry.playerId).map(contestant => (
+                                      <div key={contestant.id} className="bg-white border border-amber-200 rounded p-2">
+                                        <div className="font-medium text-amber-800">{contestant.name}</div>
+                                        {contestant.eliminatedWeek && (
+                                          <div className="text-xs text-red-600">
+                                            Eliminated Week {contestant.eliminatedWeek}
+                                          </div>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
-                                ))}
+                                    ))
+                                  ) : (
+                                    <div className="text-amber-600">No contestants found for this player</div>
+                                  )
+                                ) : (
+                                  <div className="text-amber-600">Loading teams data...</div>
+                                )}
                               </div>
                             </div>
                             
