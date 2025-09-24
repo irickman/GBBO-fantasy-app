@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { addWeeklyScore, getWeeklyScores, validateWeeklyScoring, getAllContestants, updateWeeklyScore, deleteWeeklyScore, getWeeklyScoreById, validateContestantElimination, calculateSeasonTotals, getAllPlayers } from '@/lib/db/queries'
-import { SCORING_CATEGORIES } from '@/lib/db/schema'
+import { SCORING_CATEGORIES } from '@/lib/db'
 
 export async function addScoreAction(formData: FormData) {
   const week = parseInt((formData.get('week') || '').toString())

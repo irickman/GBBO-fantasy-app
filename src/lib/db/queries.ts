@@ -1,5 +1,4 @@
-import { db } from './index'
-import { SCORING_CATEGORIES } from './schema'
+import { db, SCORING_CATEGORIES } from './index'
 
 // Player operations
 export async function createPlayer(name: string, teamName: string) {
