@@ -1,5 +1,4 @@
 import { db } from './index'
-import { players, contestants, teams, weeklyScores, seasonTotals } from './schema'
 
 // Default contestants - these will be seeded if no contestants exist
 const DEFAULT_CONTESTANTS = [
@@ -12,26 +11,26 @@ const DEFAULT_CONTESTANTS = [
 export async function seedDatabase() {
   try {
     // Only seed contestants if none exist
-    const existingContestants = await db.select().from(contestants).limit(1)
+    const existingContestants = await db.getContestants()
     
     if (existingContestants.length === 0) {
       // Insert default contestants only
-      const insertedContestants = await db.insert(contestants).values(
-        DEFAULT_CONTESTANTS.map(name => ({ name }))
-      ).returning()
+      for (const name of DEFAULT_CONTESTANTS) {
+        await db.createContestant({ name, eliminatedWeek: null })
+      }
 
       return {
         success: true,
-        message: `Database seeded with ${insertedContestants.length} contestants. Players should be added via the admin interface.`,
+        message: `Database seeded with ${DEFAULT_CONTESTANTS.length} contestants. Players should be added via the admin interface.`,
         players: 0,
-        contestants: insertedContestants.length,
+        contestants: DEFAULT_CONTESTANTS.length,
         teams: 0
       }
     } else {
       return {
         success: true,
         message: 'Database already has contestants. No seeding needed.',
-        players: 0,
+        players: existingContestants.length,
         contestants: existingContestants.length,
         teams: 0
       }
@@ -44,12 +43,8 @@ export async function seedDatabase() {
 
 export async function clearAllData() {
   try {
-    // Clear all data in correct order (respecting foreign keys)
-    await db.delete(teams)
-    await db.delete(weeklyScores)
-    await db.delete(seasonTotals)
-    await db.delete(players)
-    await db.delete(contestants)
+    // Clear all data using the JSON storage
+    await db.clearAllData()
 
     return {
       success: true,
