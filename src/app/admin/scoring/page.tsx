@@ -300,7 +300,7 @@ export default function AdminScoringPage() {
                   <div className="space-y-2">
                     <select
                       multiple
-                      value={optionalScores[category] || []}
+                      value={(optionalScores[category] || []).map(String)}
                       onChange={(e) => {
                         const selectedIds = Array.from(e.target.selectedOptions, option => parseInt(option.value))
                         setOptionalScores(prev => ({
