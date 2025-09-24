@@ -117,7 +117,19 @@ export async function getAllContestantsAction() {
 export async function getPlayerTeamsAction(playerId: number) {
   try {
     const playerTeams = await getTeamsByPlayerId(playerId)
-    return { ok: true, teams: playerTeams }
+    const contestants = await getAllContestants()
+    
+    // Add contestant names to teams
+    const teamsWithNames = playerTeams.map(team => {
+      const contestant = contestants.find(c => c.id === team.contestantId)
+      return {
+        ...team,
+        teamId: team.id,
+        contestantName: contestant?.name || 'Unknown'
+      }
+    })
+    
+    return { ok: true, teams: teamsWithNames }
   } catch (error) {
     console.error('getPlayerTeamsAction error', error)
     return { ok: false, error: 'Failed to fetch player teams' }
