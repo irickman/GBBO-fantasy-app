@@ -38,7 +38,7 @@ interface Team {
   teamName: string
   contestantId: number
   contestantName: string
-  eliminatedWeek?: number
+  eliminatedWeek?: number | null
 }
 
 export default function DashboardPage() {

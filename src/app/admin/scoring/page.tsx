@@ -21,7 +21,7 @@ const formatCategoryName = (category: string) => {
 interface Contestant {
   id: number
   name: string
-  eliminatedWeek?: number
+  eliminatedWeek?: number | null
 }
 
 interface WeeklyScore {
