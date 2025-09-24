@@ -157,7 +157,7 @@ export async function calculateSeasonTotals(playerId: number) {
   if (existingTotal) {
     await db.updateSeasonTotal(playerId, { totalPoints })
   } else {
-    await db.createSeasonTotal(playerId, totalPoints)
+    await db.createSeasonTotal({ playerId, totalPoints })
   }
   
   return totalPoints
