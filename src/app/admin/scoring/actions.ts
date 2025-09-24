@@ -26,7 +26,8 @@ export async function addScoreAction(formData: FormData) {
       return { ok: false, error: 'Contestant is eliminated and cannot be scored for this week' }
     }
 
-    await addWeeklyScore(week, contestantId, category)
+    const points = SCORING_CATEGORIES[category]
+    await addWeeklyScore(week, contestantId, category, points)
     
     // Recalculate season totals for all players
     const players = await getAllPlayers()
@@ -98,7 +99,8 @@ export async function updateScoreAction(formData: FormData) {
       return { ok: false, error: 'Contestant is eliminated and cannot be scored for this week' }
     }
 
-    await updateWeeklyScore(scoreId, contestantId, category)
+    const points = SCORING_CATEGORIES[category]
+    await updateWeeklyScore(scoreId, week, contestantId, category, points)
     
     // Recalculate season totals for all players
     const players = await getAllPlayers()
