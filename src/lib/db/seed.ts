@@ -1,5 +1,5 @@
 import { db } from './index'
-import { players, contestants, teams } from './schema'
+import { players, contestants, teams, weeklyScores, seasonTotals } from './schema'
 
 // Default contestants - these will be seeded if no contestants exist
 const DEFAULT_CONTESTANTS = [

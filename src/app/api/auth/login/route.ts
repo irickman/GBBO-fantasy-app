@@ -29,7 +29,8 @@ export async function POST(req: Request) {
         sameSite: 'strict' 
       },
     })
-    (session as any).auth = { loggedIn: true, at: Date.now() }
+    const sessionData = session as any
+    sessionData.auth = { loggedIn: true, at: Date.now() }
     await session.save()
     return res
   } catch (e) {
