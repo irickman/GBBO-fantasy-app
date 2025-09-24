@@ -58,7 +58,7 @@ export default function AdminTeamsPage() {
         const teamsData: Record<number, Team[]> = {}
         for (const player of playersRes.players) {
           const teamsRes = await getPlayerTeamsAction(player.id)
-          if (teamsRes.ok) {
+          if (teamsRes.ok && teamsRes.teams) {
             teamsData[player.id] = teamsRes.teams
           }
         }
