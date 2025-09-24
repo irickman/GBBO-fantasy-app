@@ -37,7 +37,7 @@ export default function AdminContestantsPage() {
       setLoading(true)
       const result = await getAllContestantsAction()
       
-      if (result.ok) {
+      if (result.ok && result.contestants) {
         setContestants(result.contestants)
       } else {
         setError(result.error || 'Failed to load contestants')
