@@ -76,14 +76,14 @@ export async function updateScoreAction(formData: FormData) {
   try {
     // Get the existing score to check the week
     const existingScore = await getWeeklyScoreById(scoreId)
-    if (existingScore.length === 0) {
+    if (!existingScore) {
       return { ok: false, error: 'Score not found' }
     }
 
-    const week = existingScore[0].week
+    const week = existingScore.week
 
     // Validate that this category hasn't been scored for this week by another contestant
-    const canScore = await validateWeeklyScoring(week, category)
+    const canScore = await validateWeeklyScoring(week, contestantId, category)
     if (!canScore) {
       // Check if the existing score is the same contestant
       const currentScores = await getWeeklyScores(week)
