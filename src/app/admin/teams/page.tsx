@@ -51,7 +51,7 @@ export default function AdminTeamsPage() {
         getAllContestantsAction()
       ])
       
-      if (playersRes.ok) {
+      if (playersRes.ok && playersRes.players) {
         setPlayers(playersRes.players)
         
         // Load teams for each player
@@ -65,7 +65,7 @@ export default function AdminTeamsPage() {
         setPlayerTeams(teamsData)
       }
       
-      if (contestantsRes.ok) {
+      if (contestantsRes.ok && contestantsRes.contestants) {
         setContestants(contestantsRes.contestants)
       }
     } catch (err) {
