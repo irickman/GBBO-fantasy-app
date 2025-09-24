@@ -27,6 +27,9 @@ data/
 seeds/
 *.csv
 
+# Build scripts (not needed in production)
+build-scripts/
+
 # IDE
 .vscode/
 .idea/
