@@ -56,3 +56,4 @@ export const SCORING_CATEGORIES = {
 } as const
 
 export type ScoringCategory = keyof typeof SCORING_CATEGORIES
+

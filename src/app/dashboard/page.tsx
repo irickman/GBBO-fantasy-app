@@ -26,6 +26,11 @@ interface WeeklyScore {
   points: number
 }
 
+interface WeeklyScoreData {
+  week: number
+  scores: WeeklyScore[]
+}
+
 interface Team {
   teamId: number
   playerId: number
@@ -39,12 +44,16 @@ interface Team {
 export default function DashboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [week3Scores, setWeek3Scores] = useState<WeeklyScore[]>([])
+  const [allWeeklyScores, setAllWeeklyScores] = useState<WeeklyScoreData[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null)
   const [playerDetails, setPlayerDetails] = useState<Record<number, any>>({})
   const [showAdminMenu, setShowAdminMenu] = useState(false)
+  const [currentWeek, setCurrentWeek] = useState(2)
+  const [weekStatus, setWeekStatus] = useState<any>(null)
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set())
 
   // Load data
   useEffect(() => {
@@ -68,22 +77,34 @@ export default function DashboardPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const [leaderboardRes, week3Res, teamsRes] = await Promise.all([
+      const [leaderboardRes, currentWeekRes, teamsRes, weeklyScoresRes] = await Promise.all([
         fetch('/api/leaderboard').then(r => r.json()),
-        fetch('/api/weekly-scores/3').then(r => r.json()),
-        fetch('/api/teams').then(r => r.json())
+        fetch('/api/current-week').then(r => r.json()),
+        fetch('/api/teams').then(r => r.json()),
+        fetch('/api/weekly-scores').then(r => r.json())
       ])
       
       if (leaderboardRes.leaderboard) {
         setLeaderboard(leaderboardRes.leaderboard)
       }
       
-      if (week3Res.scores) {
-        setWeek3Scores(week3Res.scores)
+      if (currentWeekRes.currentWeek) {
+        setCurrentWeek(currentWeekRes.currentWeek)
+        setWeekStatus(currentWeekRes.weekStatus)
+        
+        // Load scores for the current week
+        const weekScoresRes = await fetch(`/api/weekly-scores/${currentWeekRes.currentWeek}`).then(r => r.json())
+        if (weekScoresRes.scores) {
+          setWeek3Scores(weekScoresRes.scores)
+        }
       }
       
       if (teamsRes.teams) {
         setTeams(teamsRes.teams)
+      }
+      
+      if (weeklyScoresRes.weeklyScores) {
+        setAllWeeklyScores(weeklyScoresRes.weeklyScores)
       }
     } catch (err) {
       setError('Failed to load data')
@@ -129,6 +150,46 @@ export default function DashboardPage() {
       }))
   }
 
+  const getPlayerWeeklyPoints = (playerId: number, week: number) => {
+    const playerContestants = getPlayerContestants(playerId).map(c => c.id)
+    const weekData = allWeeklyScores.find(w => w.week === week)
+    
+    if (!weekData) return 0
+    
+    return weekData.scores
+      .filter(score => playerContestants.includes(score.contestantId))
+      .reduce((total, score) => total + score.points, 0)
+  }
+
+  const getPlayerName = (playerId: number) => {
+    const player = leaderboard.find(p => p.playerId === playerId)
+    return player ? player.playerName : `Player ${playerId}`
+  }
+
+  const toggleWeekExpansion = (week: number) => {
+    setExpandedWeeks(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(week)) {
+        newSet.delete(week)
+      } else {
+        newSet.add(week)
+      }
+      return newSet
+    })
+  }
+
+  const getAllWeeks = () => {
+    const weeks = []
+    for (let week = 2; week <= currentWeek; week++) {
+      weeks.push(week)
+    }
+    return weeks.sort((a, b) => b - a) // Most recent first
+  }
+
+  const hasScoresForWeek = (week: number) => {
+    return allWeeklyScores.some(w => w.week === week)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 p-8">
@@ -148,7 +209,10 @@ export default function DashboardPage() {
               <h1 className="text-4xl font-bold text-amber-800 mb-2">
                 🧁 GBBO Fantasy League
               </h1>
-              <p className="text-amber-600">Week 3 Complete • Week 4 Next (September 26th)</p>
+              <p className="text-amber-600">
+                {weekStatus?.hasScores ? `Week ${currentWeek - 1} Complete` : 'No scores yet'} • 
+                Week {currentWeek} {weekStatus?.hasScores ? 'Next' : 'Current'}
+              </p>
             </div>
             <div className="relative admin-menu">
               <button
@@ -165,7 +229,7 @@ export default function DashboardPage() {
                       className="block px-4 py-2 text-sm text-amber-700 hover:bg-amber-50"
                       onClick={() => setShowAdminMenu(false)}
                     >
-                      Enter Week 4 Scores
+                      Enter Week {currentWeek} Scores
                     </Link>
                     <Link
                       href="/admin/teams"
@@ -173,6 +237,13 @@ export default function DashboardPage() {
                       onClick={() => setShowAdminMenu(false)}
                     >
                       Manage Teams
+                    </Link>
+                    <Link
+                      href="/admin/contestants"
+                      className="block px-4 py-2 text-sm text-amber-700 hover:bg-amber-50"
+                      onClick={() => setShowAdminMenu(false)}
+                    >
+                      Manage Contestants
                     </Link>
                   </div>
                 </div>
@@ -187,7 +258,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
           {/* Current Leaderboard */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-semibold text-amber-900 mb-4">🏆 Current Standings</h2>
@@ -203,24 +274,24 @@ export default function DashboardPage() {
                       onClick={() => togglePlayerExpansion(entry.playerId)}
                     >
                       <div className="flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                          <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-white text-xs sm:text-sm ${
                             index === 0 ? 'bg-yellow-500' : 
                             index === 1 ? 'bg-gray-400' : 
                             index === 2 ? 'bg-amber-600' : 'bg-amber-500'
                           }`}>
                             {index + 1}
                           </div>
-                          <div>
-                            <div className="font-semibold text-amber-900">{entry.playerName}</div>
-                            <div className="text-sm text-amber-600">{entry.teamName}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-amber-900 text-sm sm:text-base truncate">{entry.playerName}</div>
+                            <div className="text-xs sm:text-sm text-amber-600 truncate">{entry.teamName}</div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="text-2xl font-bold text-amber-800">
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          <div className="text-lg sm:text-2xl font-bold text-amber-800">
                             {entry.totalPoints}
                           </div>
-                          <div className="text-amber-600">
+                          <div className="text-amber-600 text-sm sm:text-base">
                             {expandedPlayer === entry.playerId ? '▼' : '▶'}
                           </div>
                         </div>
@@ -298,29 +369,91 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Week 3 Scores */}
+          {/* Weekly Scoreboard */}
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold text-amber-900 mb-4">📊 Week 3 Results</h2>
+            <h2 className="text-2xl font-semibold text-amber-900 mb-4">📊 Weekly Scoreboard</h2>
             
-            {week3Scores.length === 0 ? (
-              <p className="text-amber-600">No scores recorded for Week 3 yet.</p>
-            ) : (
-              <div className="space-y-3">
-                {week3Scores.map(score => (
-                  <div key={score.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-medium text-amber-900">{score.contestantName}</div>
-                        <div className="text-sm text-amber-600">{formatCategoryName(score.category)}</div>
+            <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+              {getAllWeeks().map(week => {
+                const isExpanded = expandedWeeks.has(week)
+                const hasScores = hasScoresForWeek(week)
+                const isCurrentWeek = week === currentWeek
+                
+                return (
+                  <div key={week} className="border border-amber-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => toggleWeekExpansion(week)}
+                      className="w-full p-4 bg-amber-50 hover:bg-amber-100 transition-colors text-left"
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${
+                            isCurrentWeek ? 'bg-green-500' : 'bg-amber-500'
+                          }`}>
+                            {week}
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-amber-900">
+                              Week {week}
+                              {isCurrentWeek && <span className="text-sm text-green-600 ml-2">(Current)</span>}
+                            </h3>
+                            <p className="text-sm text-amber-600">
+                              {hasScores ? 'Click to view results' : 'Coming soon'}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-amber-600">
+                          {isExpanded ? '▼' : '▶'}
+                        </div>
                       </div>
-                      <div className="text-lg font-bold text-amber-800">
-                        {score.points} pts
+                    </button>
+                    
+                    {isExpanded && (
+                      <div className="p-4 bg-white border-t border-amber-200">
+                        {hasScores ? (
+                          <div className="space-y-2">
+                            {leaderboard
+                              .map(player => ({
+                                playerId: player.playerId,
+                                playerName: player.playerName,
+                                teamName: player.teamName,
+                                points: getPlayerWeeklyPoints(player.playerId, week)
+                              }))
+                              .sort((a, b) => b.points - a.points)
+                              .map((player, index) => (
+                                <div key={player.playerId} className="flex justify-between items-center bg-amber-50 rounded p-3">
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-xs ${
+                                      index === 0 ? 'bg-yellow-500' : 
+                                      index === 1 ? 'bg-gray-400' : 
+                                      index === 2 ? 'bg-amber-600' : 'bg-amber-500'
+                                    }`}>
+                                      {index + 1}
+                                    </div>
+                                    <div>
+                                      <div className="font-medium text-amber-900 text-sm">{player.playerName}</div>
+                                      <div className="text-xs text-amber-600">{player.teamName}</div>
+                                    </div>
+                                  </div>
+                                  <div className="text-lg font-bold text-amber-800">
+                                    {player.points} pts
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-amber-600">
+                            <div className="text-4xl mb-2">⏳</div>
+                            <p className="text-lg font-medium">Scores coming soon</p>
+                            <p className="text-sm">Check back after the episode airs!</p>
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                )
+              })}
+            </div>
           </div>
         </div>
 

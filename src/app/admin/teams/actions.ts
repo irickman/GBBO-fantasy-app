@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createPlayer, assignContestantToPlayer, getAllPlayers, getAllContestants, getAllTeams, getPlayerTeams } from '@/lib/db/queries'
+import { createPlayer, assignContestantToPlayer, getAllPlayers, getAllContestants, getAllTeams, getPlayerTeams, deletePlayer } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { teams } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -120,5 +120,23 @@ export async function getPlayerTeamsAction(playerId: number) {
   } catch (error) {
     console.error('getPlayerTeamsAction error', error)
     return { ok: false, error: 'Failed to fetch player teams' }
+  }
+}
+
+export async function deletePlayerAction(formData: FormData) {
+  const playerId = parseInt((formData.get('playerId') || '').toString())
+  
+  if (!playerId) {
+    return { ok: false, error: 'Player ID is required' }
+  }
+
+  try {
+    await deletePlayer(playerId)
+    revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    return { ok: true }
+  } catch (error) {
+    console.error('deletePlayerAction error', error)
+    return { ok: false, error: 'Failed to delete player' }
   }
 }

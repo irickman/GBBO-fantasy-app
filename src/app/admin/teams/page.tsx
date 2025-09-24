@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createPlayerAction, updatePlayerTeamAction, getAllPlayersAction, getAllContestantsAction, getPlayerTeamsAction } from './actions'
+import { createPlayerAction, updatePlayerTeamAction, getAllPlayersAction, getAllContestantsAction, getPlayerTeamsAction, deletePlayerAction } from './actions'
 
 interface Player {
   id: number
@@ -138,6 +138,24 @@ export default function AdminTeamsPage() {
     setSelectedContestants({})
   }
 
+  const handleDeletePlayer = async (playerId: number) => {
+    if (!confirm('Are you sure you want to delete this player? This will also remove all their team assignments and scores.')) {
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('playerId', playerId.toString())
+
+    const result = await deletePlayerAction(formData)
+    if (result.ok) {
+      setSuccess('Player deleted successfully!')
+      await loadData()
+      setTimeout(() => setSuccess(''), 3000)
+    } else {
+      setError(result.error || 'Failed to delete player')
+    }
+  }
+
   const handleContestantToggle = (playerId: number, contestantId: number) => {
     setSelectedContestants(prev => {
       const current = prev[playerId] || []
@@ -157,21 +175,8 @@ export default function AdminTeamsPage() {
   }
 
   const getAvailableContestants = (playerId: number) => {
-    const selected = selectedContestants[playerId] || []
-    const currentTeams = playerTeams[playerId] || []
-    const currentContestantIds = currentTeams.map(team => team.contestantId)
-    
-    return contestants.filter(contestant => {
-      // Include if already selected or if not assigned to any other player
-      if (selected.includes(contestant.id) || currentContestantIds.includes(contestant.id)) {
-        return true
-      }
-      
-      // Check if assigned to other players
-      return !Object.values(playerTeams).some(teams => 
-        teams.some(team => team.contestantId === contestant.id)
-      )
-    })
+    // Return all contestants - no filtering needed
+    return contestants
   }
 
   if (loading) {
@@ -193,16 +198,22 @@ export default function AdminTeamsPage() {
               <h1 className="text-4xl font-bold text-amber-900 mb-2">Team Management</h1>
               <p className="text-amber-700">Manage players and their team assignments</p>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-2 sm:gap-4">
               <button
                 onClick={() => setShowAddPlayer(true)}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm sm:text-base"
               >
                 ➕ Add Player
               </button>
               <Link
+                href="/admin/contestants"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm sm:text-base"
+              >
+                👥 Contestants
+              </Link>
+              <Link
                 href="/dashboard"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm sm:text-base"
               >
                 🏠 Home
               </Link>
@@ -286,33 +297,41 @@ export default function AdminTeamsPage() {
 
             return (
               <div key={player.id} className="bg-white rounded-lg shadow-lg p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-amber-900">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+                  <h3 className="text-lg sm:text-xl font-semibold text-amber-900">
                     {player.name} - {player.teamName}
                   </h3>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     {isEditing ? (
                       <>
                         <button
                           onClick={() => handleSaveTeam(player.id)}
-                          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm"
                         >
                           Save
                         </button>
                         <button
                           onClick={handleCancelEdit}
-                          className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md transition-colors"
+                          className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm"
                         >
                           Cancel
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => handleEditTeam(player.id)}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
-                      >
-                        Edit Team
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleEditTeam(player.id)}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm"
+                        >
+                          Edit Team
+                        </button>
+                        <button
+                          onClick={() => handleDeletePlayer(player.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 sm:px-4 rounded-md transition-colors text-sm"
+                        >
+                          Delete
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -322,37 +341,43 @@ export default function AdminTeamsPage() {
                     <h4 className="font-semibold text-amber-800 mb-3">
                       Select 3 Contestants ({selected.length}/3)
                     </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                      {availableContestants.map(contestant => {
-                        const isSelected = selected.includes(contestant.id)
-                        const isCurrent = teams.some(team => team.contestantId === contestant.id)
-                        const canSelect = isSelected || isCurrent || selected.length < 3
-
-                        return (
-                          <button
-                            key={contestant.id}
-                            onClick={() => handleContestantToggle(player.id, contestant.id)}
-                            disabled={!canSelect}
-                            className={`p-3 rounded-md border-2 text-left transition-colors ${
-                              isSelected || isCurrent
-                                ? 'bg-amber-200 border-amber-400 text-amber-900'
-                                : canSelect
-                                ? 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
-                                : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
-                            }`}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[1, 2, 3].map(slot => (
+                        <div key={slot} className="space-y-2">
+                          <label className="block text-sm font-medium text-amber-700">
+                            Contestant {slot}
+                          </label>
+                          <select
+                            value={selected[slot - 1] || ''}
+                            onChange={(e) => {
+                              const contestantId = parseInt(e.target.value)
+                              if (contestantId) {
+                                const newSelected = [...selected]
+                                newSelected[slot - 1] = contestantId
+                                setSelectedContestants(prev => ({
+                                  ...prev,
+                                  [player.id]: newSelected
+                                }))
+                              }
+                            }}
+                            className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                           >
-                            <div className="font-medium">{contestant.name}</div>
-                            {contestant.eliminatedWeek && (
-                              <div className="text-xs text-red-600">
-                                Eliminated Week {contestant.eliminatedWeek}
-                              </div>
-                            )}
-                            {isCurrent && !isSelected && (
-                              <div className="text-xs text-amber-600">Current</div>
-                            )}
-                          </button>
-                        )
-                      })}
+                            <option value="">Select contestant...</option>
+                            {availableContestants.map(contestant => {
+                              const isAlreadySelected = selected.includes(contestant.id) && selected.indexOf(contestant.id) !== slot - 1
+                              return (
+                                <option 
+                                  key={contestant.id} 
+                                  value={contestant.id}
+                                  disabled={isAlreadySelected}
+                                >
+                                  {contestant.name} {contestant.eliminatedWeek ? `(Eliminated W${contestant.eliminatedWeek})` : ''}
+                                </option>
+                              )
+                            })}
+                          </select>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ) : (

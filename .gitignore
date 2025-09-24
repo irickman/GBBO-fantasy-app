@@ -19,6 +19,13 @@ build/
 # Database
 *.db
 *.db-journal
+*.sqlite
+*.sqlite3
+
+# Sensitive data
+data/
+seeds/
+*.csv
 
 # IDE
 .vscode/
@@ -78,3 +85,4 @@ jspm_packages/
 
 # DynamoDB Local files
 .dynamodb/
+
