@@ -7,7 +7,7 @@ export async function authGuard() {
     cookieName: authConfig.IRON_SESSION_COOKIE_NAME,
     password: authConfig.IRON_SESSION_PASSWORD,
   })
-  return Boolean(session.auth?.loggedIn)
+  return Boolean((session as any).auth?.loggedIn)
 }
 
 export async function getSession() {

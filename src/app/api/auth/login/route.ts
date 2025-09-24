@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         sameSite: 'strict' 
       },
     })
-    session.auth = { loggedIn: true, at: Date.now() }
+    (session as any).auth = { loggedIn: true, at: Date.now() }
     await session.save()
     return res
   } catch (e) {
