@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { getIronSession } from 'iron-session'
 import bcrypt from 'bcrypt'
-import authConfig from '@/config/auth'
+import authConfig from '../../../../config/auth'
 
 export async function POST(req: Request) {
   try {

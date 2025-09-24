@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { getIronSession } from 'iron-session'
-import authConfig from '@/config/auth'
+import authConfig from '../../config/auth'
 
 export async function authGuard() {
   const session = await getIronSession(cookies(), {
