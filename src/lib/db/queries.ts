@@ -64,11 +64,21 @@ export async function addWeeklyScore(week: number, contestantId: number, categor
 }
 
 export async function getWeeklyScores(week?: number) {
-  return await db.getWeeklyScores(week)
+  const scores = await db.getWeeklyScores(week)
+  const contestants = await getAllContestants()
+  
+  // Add contestant names to scores
+  return scores.map(score => {
+    const contestant = contestants.find(c => c.id === score.contestantId)
+    return {
+      ...score,
+      contestantName: contestant?.name || 'Unknown'
+    }
+  })
 }
 
 export async function getWeeklyScoresByWeek(week: number) {
-  return await db.getWeeklyScores(week)
+  return await getWeeklyScores(week)
 }
 
 export async function getWeeklyScoreById(scoreId: number) {

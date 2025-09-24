@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getWeeklyScoresByWeek, getCurrentWeek } from '@/lib/db/queries'
+import { getWeeklyScores, getCurrentWeek } from '@/lib/db/queries'
 
 export async function GET() {
   try {
@@ -8,7 +8,7 @@ export async function GET() {
     
     // Get scores for all weeks from 2 to current week
     for (let week = 2; week <= currentWeek; week++) {
-      const scores = await getWeeklyScoresByWeek(week)
+      const scores = await getWeeklyScores(week)
       if (scores.length > 0) {
         allWeeklyScores.push({
           week,

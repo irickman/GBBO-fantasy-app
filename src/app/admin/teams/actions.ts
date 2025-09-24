@@ -1,10 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createPlayer, assignContestantToPlayer, getAllPlayers, getAllContestants, getAllTeams, getPlayerTeams, deletePlayer } from '@/lib/db/queries'
-import { db } from '@/lib/db'
-import { teams } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { createPlayer, getAllPlayers, getAllContestants, getAllTeams, getTeamsByPlayerId, deletePlayer, createTeam, deleteTeam } from '@/lib/db/queries'
 
 export async function createPlayerAction(formData: FormData) {
   const name = (formData.get('name') || '').toString().trim()
@@ -39,26 +36,27 @@ export async function updatePlayerTeamAction(formData: FormData) {
     }
 
     // Check if any contestant is already assigned to another player
+    const allTeams = await getAllTeams()
     for (const contestantId of selectedContestantIds) {
-      const existingAssignment = await db.select()
-        .from(teams)
-        .where(eq(teams.contestantId, contestantId))
+      const existingAssignment = allTeams.find(team => 
+        team.contestantId === contestantId && team.playerId !== playerId
+      )
       
-      if (existingAssignment.length > 0 && existingAssignment[0].playerId !== playerId) {
+      if (existingAssignment) {
         return { ok: false, error: `Contestant is already assigned to another player` }
       }
     }
 
     // Delete existing team assignments for this player
-    await db.delete(teams).where(eq(teams.playerId, playerId))
+    const existingTeams = await getTeamsByPlayerId(playerId)
+    for (const team of existingTeams) {
+      await deleteTeam(team.id)
+    }
 
-    // Insert new team assignments
-    const teamAssignments = selectedContestantIds.map((contestantId: number) => ({
-      playerId,
-      contestantId
-    }))
-
-    await db.insert(teams).values(teamAssignments)
+    // Create new team assignments
+    for (const contestantId of selectedContestantIds) {
+      await createTeam(playerId, contestantId)
+    }
 
     revalidatePath('/admin/teams')
     return { ok: true }
@@ -78,11 +76,14 @@ export async function assignContestantsAction(formData: FormData) {
 
   try {
     // First, remove existing assignments for this player
-    await db.delete(teams).where(eq(teams.playerId, playerId))
+    const existingTeams = await getTeamsByPlayerId(playerId)
+    for (const team of existingTeams) {
+      await deleteTeam(team.id)
+    }
     
     // Assign the 3 contestants
     for (const contestantId of contestantIds) {
-      await assignContestantToPlayer(playerId, contestantId)
+      await createTeam(playerId, contestantId)
     }
     
     revalidatePath('/admin/teams')
@@ -115,7 +116,7 @@ export async function getAllContestantsAction() {
 
 export async function getPlayerTeamsAction(playerId: number) {
   try {
-    const playerTeams = await getPlayerTeams(playerId)
+    const playerTeams = await getTeamsByPlayerId(playerId)
     return { ok: true, teams: playerTeams }
   } catch (error) {
     console.error('getPlayerTeamsAction error', error)
