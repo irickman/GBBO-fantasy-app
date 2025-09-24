@@ -12,7 +12,7 @@ import {
 interface Contestant {
   id: number
   name: string
-  eliminatedWeek?: number
+  eliminatedWeek?: number | null
 }
 
 export default function AdminContestantsPage() {
