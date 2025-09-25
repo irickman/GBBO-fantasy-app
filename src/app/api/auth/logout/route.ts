@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { getIronSession } from 'iron-session'
+import { redirect } from 'next/navigation'
 import authConfig from '../../../../config/auth'
 
 export async function POST() {
@@ -8,5 +9,5 @@ export async function POST() {
     password: authConfig.IRON_SESSION_PASSWORD,
   })
   session.destroy()
-  return new Response(null, { status: 204 })
+  redirect('/login')
 }
