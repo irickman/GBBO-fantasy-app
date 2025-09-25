@@ -60,12 +60,17 @@ const defaultData: DatabaseData = {
 // Helper function to get data from blob storage
 async function getData(): Promise<DatabaseData> {
   try {
+    console.log('Fetching data from blob storage...')
     const { blobs } = await list({ prefix: 'database/' })
+    console.log('Found blobs:', blobs.map(b => b.pathname))
     const dataBlob = blobs.find(blob => blob.pathname === 'database/data.json')
     
     if (!dataBlob) {
+      console.log('No data blob found, returning default data')
       return defaultData
     }
+    
+    console.log('Found data blob:', dataBlob.pathname)
     
     const response = await fetch(dataBlob.url)
     if (!response.ok) {
@@ -73,6 +78,39 @@ async function getData(): Promise<DatabaseData> {
     }
     
     const data = await response.json()
+    
+    // Convert date strings back to Date objects
+    if (data.players) {
+      data.players = data.players.map((p: any) => ({
+        ...p,
+        createdAt: new Date(p.createdAt)
+      }))
+    }
+    if (data.contestants) {
+      data.contestants = data.contestants.map((c: any) => ({
+        ...c,
+        createdAt: new Date(c.createdAt)
+      }))
+    }
+    if (data.teams) {
+      data.teams = data.teams.map((t: any) => ({
+        ...t,
+        createdAt: new Date(t.createdAt)
+      }))
+    }
+    if (data.weeklyScores) {
+      data.weeklyScores = data.weeklyScores.map((s: any) => ({
+        ...s,
+        createdAt: new Date(s.createdAt)
+      }))
+    }
+    if (data.seasonTotals) {
+      data.seasonTotals = data.seasonTotals.map((s: any) => ({
+        ...s,
+        lastUpdated: new Date(s.lastUpdated)
+      }))
+    }
+    
     return data
   } catch (error) {
     console.error('Error fetching data from blob storage:', error)
@@ -83,10 +121,21 @@ async function getData(): Promise<DatabaseData> {
 // Helper function to save data to blob storage
 async function saveData(data: DatabaseData): Promise<void> {
   try {
-    await put('database/data.json', JSON.stringify(data, null, 2), {
+    console.log('Saving data to blob storage:', {
+      players: data.players.length,
+      contestants: data.contestants.length,
+      teams: data.teams.length,
+      weeklyScores: data.weeklyScores.length,
+      seasonTotals: data.seasonTotals.length,
+      nextId: data.nextId
+    })
+    
+    const result = await put('database/data.json', JSON.stringify(data, null, 2), {
       access: 'public',
       addRandomSuffix: false
     })
+    
+    console.log('Data saved to blob storage successfully:', result.url)
   } catch (error) {
     console.error('Error saving data to blob storage:', error)
     throw error
