@@ -5,8 +5,8 @@ export async function middleware(req: Request) {
   const url = new URL(req.url)
   const res = NextResponse.next()
 
-  // Protect dashboard and other protected routes
-  if (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin')) {
+  // Protect root path, dashboard and other protected routes
+  if (url.pathname === '/' || url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/admin')) {
     const ok = await authGuard()
     if (!ok) {
       return NextResponse.redirect(new URL('/login', url))
@@ -17,5 +17,5 @@ export async function middleware(req: Request) {
 }
 
 export const config = { 
-  matcher: ['/((?!_next|api|static|favicon.ico|login).*)'] 
+  matcher: ['/', '/((?!_next|api|static|favicon.ico|login).*)'] 
 }
