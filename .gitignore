@@ -29,6 +29,7 @@ seeds/
 
 # Build scripts (not needed in production)
 build-scripts/
+scripts/
 
 # IDE
 .vscode/
