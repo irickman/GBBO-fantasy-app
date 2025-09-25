@@ -8,17 +8,17 @@ export async function seedDatabase() {
     // 1. Create Contestants with elimination status
     const contestantsData = [
       { name: 'Aaron', eliminatedWeek: null },
+      { name: 'Hassan', eliminatedWeek: 1 },
       { name: 'Iain', eliminatedWeek: null },
       { name: 'Jasmine', eliminatedWeek: null },
       { name: 'Jessika', eliminatedWeek: null },
+      { name: 'Leighton', eliminatedWeek: 2 },
       { name: 'Lesley', eliminatedWeek: null },
       { name: 'Nadia', eliminatedWeek: null },
       { name: 'Nataliia', eliminatedWeek: null },
       { name: 'Pui Man', eliminatedWeek: 3 },
       { name: 'Toby', eliminatedWeek: null },
       { name: 'Tom', eliminatedWeek: null },
-      { name: 'Hassan', eliminatedWeek: 1 },
-      { name: 'Leighton', eliminatedWeek: 2 },
     ]
 
     const contestantMap = new Map<string, number>()
