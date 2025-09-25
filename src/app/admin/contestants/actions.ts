@@ -41,11 +41,10 @@ export async function updateContestantAction(formData: FormData) {
 
   try {
     // Update the contestant name and elimination status
-    const contestant = await updateContestant(
-      id, 
+    const contestant = await updateContestant(id, {
       name,
-      eliminatedWeek ? parseInt(eliminatedWeek) : undefined
-    )
+      eliminatedWeek: eliminatedWeek ? parseInt(eliminatedWeek) : null
+    })
     
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')

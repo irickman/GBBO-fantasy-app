@@ -277,10 +277,6 @@ export async function getAllTeams() {
   return allTeams
 }
 
-export async function createTeam(playerId: number, contestantId: number) {
-  return await db.createTeam(playerId, contestantId)
-}
-
 export async function deleteTeam(id: number) {
   // Note: This is a simplified implementation
   // In a real app, you'd need to track team IDs properly

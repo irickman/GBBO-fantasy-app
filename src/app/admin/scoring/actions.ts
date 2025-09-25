@@ -32,7 +32,7 @@ export async function addScoreAction(formData: FormData) {
     // Recalculate season totals for all players
     const players = await getAllPlayers()
     for (const player of players) {
-      await calculateSeasonTotals(player.id)
+      await calculateSeasonTotals()
     }
     
     revalidatePath('/admin/scoring')
@@ -105,7 +105,7 @@ export async function updateScoreAction(formData: FormData) {
     // Recalculate season totals for all players
     const players = await getAllPlayers()
     for (const player of players) {
-      await calculateSeasonTotals(player.id)
+      await calculateSeasonTotals()
     }
     
     revalidatePath('/admin/scoring')
@@ -130,7 +130,7 @@ export async function deleteScoreAction(formData: FormData) {
     // Recalculate season totals for all players
     const players = await getAllPlayers()
     for (const player of players) {
-      await calculateSeasonTotals(player.id)
+      await calculateSeasonTotals()
     }
     
     revalidatePath('/admin/scoring')
