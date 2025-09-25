@@ -11,9 +11,11 @@ export async function POST(req: Request) {
       return new Response('Bad Request', { status: 400 })
     }
 
-    console.log('Using hash:', authConfig.AUTH_PASSWORD_HASH)
+    // Try environment variable first, fallback to config
+    const passwordHash = process.env.AUTH_PASSWORD_HASH || authConfig.AUTH_PASSWORD_HASH
+    console.log('Using hash:', passwordHash)
     console.log('Password received:', password)
-    const ok = await bcrypt.compare(password, authConfig.AUTH_PASSWORD_HASH)
+    const ok = await bcrypt.compare(password, passwordHash)
     console.log('Password match:', ok)
     // Add jitter to prevent timing attacks
     await new Promise((r) => setTimeout(r, 400 + Math.random() * 250))
