@@ -1,15 +1,14 @@
-// Temporary JSON-based storage for Vercel deployment
-// This will be replaced with proper Postgres once database is set up
-import { jsonDb } from './json-storage'
+// Vercel-compatible persistent storage using file system
+import { vercelDb } from './vercel-storage'
 
-// Export the JSON database as the main database
-export const db = jsonDb
+// Export the Vercel database as the main database
+export const db = vercelDb
 
 // Database initialization function
 export async function initializeDatabase() {
   try {
     // Seed default data
-    await jsonDb.seedDefaultData()
+    await vercelDb.seedDefaultData()
     console.log('Database initialized with default data')
   } catch (error) {
     console.error('Database initialization error:', error)
