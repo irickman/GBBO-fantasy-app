@@ -1,17 +1,13 @@
 import { db } from './index'
-
-// Default contestants - these will be seeded if no contestants exist
-const DEFAULT_CONTESTANTS = [
-  'Tom', 'Jessika', 'Jasmine', 'Nataliia', 'Lesley', 'Iain',
-  'Toby', 'Aaron', 'Pui Man', 'Nadia', 'Leighton', 'Hassan'
-]
-
-// No default players - these should be added via the UI
+import { contestants, players, teams } from './schema'
+import { createContestant, createPlayer, updatePlayerTeam } from './queries'
 
 export async function seedDatabase() {
   try {
     // Clear existing data first
-    await db.clearAllData()
+    await db.delete(teams)
+    await db.delete(players)
+    await db.delete(contestants)
 
     // 1. Create Contestants with elimination status
     const contestantsData = [
@@ -31,7 +27,7 @@ export async function seedDatabase() {
 
     const contestantMap = new Map<string, number>()
     for (const c of contestantsData) {
-      const contestant = await db.createContestant(c.name, c.eliminatedWeek)
+      const contestant = await createContestant(c.name, c.eliminatedWeek)
       contestantMap.set(c.name, contestant.id)
     }
 
@@ -55,10 +51,10 @@ export async function seedDatabase() {
     ]
 
     for (const p of playersData) {
-      const newPlayer = await db.createPlayer(p.name, p.teamName)
+      const newPlayer = await createPlayer(p.name, p.teamName)
       const contestantIds = p.contestants.map(name => contestantMap.get(name)).filter(Boolean) as number[]
       if (newPlayer && newPlayer.id && contestantIds.length === 3) {
-        await db.updatePlayerTeam(newPlayer.id, contestantIds)
+        await updatePlayerTeam(newPlayer.id, contestantIds)
       }
     }
 
@@ -77,8 +73,10 @@ export async function seedDatabase() {
 
 export async function clearAllData() {
   try {
-    // Clear all data using the JSON storage
-    await db.clearAllData()
+    // Clear all data in the correct order to respect foreign key constraints
+    await db.delete(teams)
+    await db.delete(players)
+    await db.delete(contestants)
 
     return {
       success: true,

@@ -1,28 +1,27 @@
 import { NextResponse } from 'next/server'
-import { getAllTeams, getAllPlayers, getAllContestants } from '@/lib/db/queries'
+import { getPlayers, getContestants } from '@/lib/db/queries'
+import { db } from '@/lib/db'
+import { teams, players, contestants } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 export async function GET() {
   try {
-    const teams = await getAllTeams()
-    const players = await getAllPlayers()
-    const contestants = await getAllContestants()
-    
-    // Add player and contestant names to teams
-    const teamsWithNames = teams.map(team => {
-      const player = players.find(p => p.id === team.playerId)
-      const contestant = contestants.find(c => c.id === team.contestantId)
-      return {
-        teamId: team.id,
-        playerId: team.playerId,
-        playerName: player?.name || 'Unknown',
-        teamName: player?.teamName || 'Unknown',
-        contestantId: team.contestantId,
-        contestantName: contestant?.name || 'Unknown',
-        eliminatedWeek: contestant?.eliminatedWeek || null
-      }
+    // Get all teams with player and contestant information
+    const teamsWithDetails = await db.select({
+      teamId: teams.id,
+      playerId: teams.playerId,
+      playerName: players.name,
+      teamName: players.teamName,
+      contestantId: teams.contestantId,
+      contestantName: contestants.name,
+      eliminatedWeek: contestants.eliminatedWeek,
     })
+    .from(teams)
+    .innerJoin(players, eq(teams.playerId, players.id))
+    .innerJoin(contestants, eq(teams.contestantId, contestants.id))
+    .orderBy(players.name, contestants.name)
     
-    return NextResponse.json({ teams: teamsWithNames })
+    return NextResponse.json({ teams: teamsWithDetails })
   } catch (error) {
     console.error('Teams API error:', error)
     return NextResponse.json({ error: 'Failed to fetch teams' }, { status: 500 })

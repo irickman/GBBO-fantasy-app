@@ -1,25 +1,18 @@
-// Vercel-compatible persistent storage using file system
-import { vercelDb } from './vercel-storage'
+// Vercel Postgres database connection
+import { drizzle } from 'drizzle-orm/vercel-postgres'
+import { sql } from '@vercel/postgres'
+import * as schema from './schema'
 
-// Export the Vercel database as the main database
-export const db = vercelDb
+// Create the database connection
+export const db = drizzle(sql, { schema })
 
-// Database initialization function
-export async function initializeDatabase() {
-  try {
-    // Seed default data
-    await vercelDb.seedDefaultData()
-    console.log('Database initialized with default data')
-  } catch (error) {
-    console.error('Database initialization error:', error)
-    throw error
-  }
-}
+// Export schema for use in other files
+export * from './schema'
 
-// Export SCORING_CATEGORIES for use in other files
+// Scoring categories configuration
 export const SCORING_CATEGORIES = {
   star_baker: 4,        // 1 per week
-  technical_win: 3,     // 1 per week  
+  technical_win: 3,     // 1 per week
   handshake: 4,         // unlimited
   raw: -1,              // unlimited
   overbaked: -1,        // unlimited
@@ -28,4 +21,3 @@ export const SCORING_CATEGORIES = {
 } as const
 
 export type ScoringCategory = keyof typeof SCORING_CATEGORIES
-

@@ -1,233 +1,308 @@
-import { db, SCORING_CATEGORIES } from './index'
+import { db } from './index'
+import { contestants, players, teams, weeklyScores, seasonTotals } from './schema'
+import { eq, and, desc, sql } from 'drizzle-orm'
+import { SCORING_CATEGORIES } from './index'
 
-// Player operations
+// Contestants
+export async function createContestant(name: string, eliminatedWeek: number | null = null) {
+  const [contestant] = await db.insert(contestants).values({
+    name,
+    eliminatedWeek,
+  }).returning()
+  return contestant
+}
+
+export async function getContestants() {
+  return await db.select().from(contestants).orderBy(contestants.name)
+}
+
+export async function getContestantById(id: number) {
+  const [contestant] = await db.select().from(contestants).where(eq(contestants.id, id))
+  return contestant || null
+}
+
+export async function updateContestant(id: number, updates: { name?: string; eliminatedWeek?: number | null }) {
+  const [contestant] = await db.update(contestants)
+    .set(updates)
+    .where(eq(contestants.id, id))
+    .returning()
+  return contestant || null
+}
+
+export async function deleteContestant(id: number) {
+  const result = await db.delete(contestants).where(eq(contestants.id, id))
+  return result.rowCount > 0
+}
+
+// Players
 export async function createPlayer(name: string, teamName: string) {
-  return await db.createPlayer({ name, teamName })
+  const [player] = await db.insert(players).values({
+    name,
+    teamName,
+  }).returning()
+  return player
 }
 
-export async function getAllPlayers() {
-  const players = await db.getPlayers()
-  return players.sort((a, b) => a.name.localeCompare(b.name))
+export async function getPlayers() {
+  return await db.select().from(players).orderBy(players.name)
 }
 
-export async function deletePlayer(playerId: number) {
-  return await db.deletePlayer(playerId)
+export async function getPlayerById(id: number) {
+  const [player] = await db.select().from(players).where(eq(players.id, id))
+  return player || null
 }
 
-// Contestant operations
-export async function createContestant(name: string, eliminatedWeek?: number) {
-  return await db.createContestant({ name, eliminatedWeek: eliminatedWeek || null })
+export async function updatePlayer(id: number, updates: { name?: string; teamName?: string }) {
+  const [player] = await db.update(players)
+    .set(updates)
+    .where(eq(players.id, id))
+    .returning()
+  return player || null
 }
 
-export async function getAllContestants() {
-  const contestants = await db.getContestants()
-  return contestants.sort((a, b) => a.name.localeCompare(b.name))
+export async function deletePlayer(id: number) {
+  const result = await db.delete(players).where(eq(players.id, id))
+  return result.rowCount > 0
 }
 
-export async function updateContestantElimination(contestantId: number, eliminatedWeek?: number) {
-  return await db.updateContestant(contestantId, { eliminatedWeek: eliminatedWeek || null })
-}
-
-export async function updateContestant(contestantId: number, name: string, eliminatedWeek?: number) {
-  return await db.updateContestant(contestantId, { name, eliminatedWeek: eliminatedWeek || null })
-}
-
-export async function deleteContestant(contestantId: number) {
-  return await db.deleteContestant(contestantId)
-}
-
-// Team operations
+// Teams
 export async function createTeam(playerId: number, contestantId: number) {
-  return await db.createTeam({ playerId, contestantId })
+  const [team] = await db.insert(teams).values({
+    playerId,
+    contestantId,
+  }).returning()
+  return team
 }
 
 export async function getTeamsByPlayerId(playerId: number) {
-  return await db.getTeamsByPlayerId(playerId)
+  return await db.select({
+    id: teams.id,
+    playerId: teams.playerId,
+    contestantId: teams.contestantId,
+    contestantName: contestants.name,
+    eliminatedWeek: contestants.eliminatedWeek,
+    createdAt: teams.createdAt,
+  })
+  .from(teams)
+  .innerJoin(contestants, eq(teams.contestantId, contestants.id))
+  .where(eq(teams.playerId, playerId))
 }
 
-export async function getAllTeams() {
-  return await db.getTeams()
+export async function updatePlayerTeam(playerId: number, contestantIds: number[]) {
+  // Delete existing teams for this player
+  await db.delete(teams).where(eq(teams.playerId, playerId))
+  
+  // Insert new teams
+  if (contestantIds.length > 0) {
+    await db.insert(teams).values(
+      contestantIds.map(contestantId => ({
+        playerId,
+        contestantId,
+      }))
+    )
+  }
 }
 
-export async function updateTeam(teamId: number, playerId: number, contestantId: number) {
-  return await db.updateTeam(teamId, { playerId, contestantId })
-}
-
-export async function deleteTeam(teamId: number) {
-  return await db.deleteTeam(teamId)
-}
-
-// Weekly scores operations
-export async function addWeeklyScore(week: number, contestantId: number, category: string, points: number) {
-  return await db.createWeeklyScore({ week, contestantId, category, points })
+// Weekly Scores
+export async function createWeeklyScore(week: number, contestantId: number, category: string, points: number) {
+  const [score] = await db.insert(weeklyScores).values({
+    week,
+    contestantId,
+    category,
+    points,
+  }).returning()
+  return score
 }
 
 export async function getWeeklyScores(week?: number) {
-  const scores = await db.getWeeklyScores(week)
-  const contestants = await getAllContestants()
-  
-  // Add contestant names to scores
-  return scores.map(score => {
-    const contestant = contestants.find(c => c.id === score.contestantId)
-    return {
-      ...score,
-      contestantName: contestant?.name || 'Unknown'
-    }
+  let query = db.select({
+    id: weeklyScores.id,
+    week: weeklyScores.week,
+    contestantId: weeklyScores.contestantId,
+    contestantName: contestants.name,
+    category: weeklyScores.category,
+    points: weeklyScores.points,
+    createdAt: weeklyScores.createdAt,
   })
+  .from(weeklyScores)
+  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
+  .orderBy(desc(weeklyScores.week), weeklyScores.category)
+
+  if (week !== undefined) {
+    query = query.where(eq(weeklyScores.week, week))
+  }
+
+  return await query
 }
 
-export async function getWeeklyScoresByWeek(week: number) {
-  return await getWeeklyScores(week)
+export async function getWeeklyScoreById(id: number) {
+  const [score] = await db.select({
+    id: weeklyScores.id,
+    week: weeklyScores.week,
+    contestantId: weeklyScores.contestantId,
+    contestantName: contestants.name,
+    category: weeklyScores.category,
+    points: weeklyScores.points,
+    createdAt: weeklyScores.createdAt,
+  })
+  .from(weeklyScores)
+  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
+  .where(eq(weeklyScores.id, id))
+  
+  return score || null
 }
 
-export async function getWeeklyScoreById(scoreId: number) {
-  return await db.getWeeklyScoreById(scoreId)
+export async function updateWeeklyScore(id: number, week: number, contestantId: number, category: string, points: number) {
+  const [score] = await db.update(weeklyScores)
+    .set({ week, contestantId, category, points })
+    .where(eq(weeklyScores.id, id))
+    .returning()
+  return score || null
 }
 
-export async function updateWeeklyScore(scoreId: number, week: number, contestantId: number, category: string, points: number) {
-  return await db.updateWeeklyScore(scoreId, { week, contestantId, category, points })
+export async function deleteWeeklyScore(id: number) {
+  const result = await db.delete(weeklyScores).where(eq(weeklyScores.id, id))
+  return result.rowCount > 0
 }
 
-export async function deleteWeeklyScore(scoreId: number) {
-  return await db.deleteWeeklyScore(scoreId)
-}
-
-// Season totals operations
-export async function createSeasonTotal(playerId: number, totalPoints: number) {
-  return await db.createSeasonTotal({ playerId, totalPoints })
+// Season Totals
+export async function createSeasonTotal(data: { playerId: number; totalPoints: number }) {
+  const [total] = await db.insert(seasonTotals).values(data).returning()
+  return total
 }
 
 export async function getSeasonTotals() {
-  return await db.getSeasonTotals()
+  return await db.select({
+    id: seasonTotals.id,
+    playerId: seasonTotals.playerId,
+    playerName: players.name,
+    totalPoints: seasonTotals.totalPoints,
+    lastUpdated: seasonTotals.lastUpdated,
+  })
+  .from(seasonTotals)
+  .innerJoin(players, eq(seasonTotals.playerId, players.id))
+  .orderBy(desc(seasonTotals.totalPoints))
 }
 
 export async function getSeasonTotalByPlayerId(playerId: number) {
-  return await db.getSeasonTotalByPlayerId(playerId)
+  const [total] = await db.select().from(seasonTotals).where(eq(seasonTotals.playerId, playerId))
+  return total || null
 }
 
-export async function updateSeasonTotal(playerId: number, totalPoints: number) {
-  return await db.updateSeasonTotal(playerId, { totalPoints })
+export async function updateSeasonTotal(playerId: number, updates: { totalPoints: number }) {
+  const [total] = await db.update(seasonTotals)
+    .set({ ...updates, lastUpdated: new Date() })
+    .where(eq(seasonTotals.playerId, playerId))
+    .returning()
+  return total || null
 }
 
 // Validation functions
-export async function validateContestantElimination(contestantId: number, week: number) {
-  const contestant = await db.getContestantById(contestantId)
+export async function validateContestantElimination(contestantId: number, week: number): Promise<boolean> {
+  const contestant = await getContestantById(contestantId)
   if (!contestant) return false
   
-  // If contestant is eliminated before this week, they can't be scored
-  if (contestant.eliminatedWeek && contestant.eliminatedWeek < week) {
-    return false
+  // If contestant is eliminated, they can only be scored in the week they were eliminated
+  if (contestant.eliminatedWeek !== null) {
+    return contestant.eliminatedWeek === week
   }
   
   return true
 }
 
-// Current week functions
-export async function getCurrentWeek() {
-  // For now, return week 4 as current
+export async function validateWeeklyScoring(week: number, contestantId: number, category: string): Promise<{ valid: boolean; error?: string }> {
+  // Check if contestant can be scored for this week
+  const canScore = await validateContestantElimination(contestantId, week)
+  if (!canScore) {
+    return { valid: false, error: 'Contestant is eliminated and cannot be scored for this week' }
+  }
+
+  // Check for duplicate winners (only one per week for certain categories)
+  const restrictedCategories = ['star_baker', 'technical_win', 'last_technical']
+  if (restrictedCategories.includes(category)) {
+    const existing = await db.select()
+      .from(weeklyScores)
+      .where(and(
+        eq(weeklyScores.week, week),
+        eq(weeklyScores.category, category)
+      ))
+    
+    if (existing.length > 0) {
+      return { valid: false, error: `Only one ${category} per week is allowed` }
+    }
+  }
+
+  return { valid: true }
+}
+
+// Current week and status
+export async function getCurrentWeek(): Promise<number> {
+  // For now, return week 4. In a real app, this would be dynamic
   return 4
 }
 
-export async function getWeekStatus(week: number) {
-  const scores = await db.getWeeklyScores(week)
-  return {
-    week,
-    hasScores: scores.length > 0,
-    scoreCount: scores.length,
-    isComplete: scores.length > 0 // Simplified for now
-  }
+export async function getWeekStatus(week: number): Promise<'complete' | 'current' | 'upcoming'> {
+  const currentWeek = await getCurrentWeek()
+  if (week < currentWeek) return 'complete'
+  if (week === currentWeek) return 'current'
+  return 'upcoming'
 }
 
-// Calculate season totals for a player
-export async function calculateSeasonTotals(playerId: number) {
-  const playerTeams = await db.getTeamsByPlayerId(playerId)
-  const contestantIds = playerTeams.map(t => t.contestantId)
+// Season totals calculation
+export async function calculateSeasonTotals() {
+  const allPlayers = await getPlayers()
   
-  let totalPoints = 0
-  
-  // Get all weekly scores for this player's contestants
-  const allScores = await db.getWeeklyScores()
-  const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
-  
-  // Sum up all points
-  totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
-  
-  // Update or create season total
-  const existingTotal = await db.getSeasonTotalByPlayerId(playerId)
-  if (existingTotal) {
-    await db.updateSeasonTotal(playerId, { totalPoints })
-  } else {
-    await db.createSeasonTotal({ playerId, totalPoints })
-  }
-  
-  return totalPoints
-}
-
-// Clear all data
-export async function clearAllData() {
-  return await db.clearAllData()
-}
-
-// Seed database
-export async function seedDatabase() {
-  return await db.seedDefaultData()
-}
-
-// Leaderboard functions
-export async function getLeaderboard() {
-  const players = await getAllPlayers()
-  const seasonTotals = await getSeasonTotals()
-  
-  const leaderboard = players.map(player => {
-    const total = seasonTotals.find(st => st.playerId === player.id)
-    return {
-      playerId: player.id,
-      playerName: player.name,
-      teamName: player.teamName,
-      totalPoints: total ? total.totalPoints : 0
+  for (const player of allPlayers) {
+    // Get all teams for this player
+    const playerTeams = await getTeamsByPlayerId(player.id)
+    const contestantIds = playerTeams.map(team => team.contestantId)
+    
+    if (contestantIds.length === 0) continue
+    
+    // Calculate total points for this player
+    const scores = await db.select({
+      points: weeklyScores.points,
+    })
+    .from(weeklyScores)
+    .where(sql`${weeklyScores.contestantId} = ANY(${contestantIds})`)
+    
+    const totalPoints = scores.reduce((sum, score) => sum + score.points, 0)
+    
+    // Update or create season total
+    const existing = await getSeasonTotalByPlayerId(player.id)
+    if (existing) {
+      await updateSeasonTotal(player.id, { totalPoints })
+    } else {
+      await createSeasonTotal({ playerId: player.id, totalPoints })
     }
-  })
-  
-  return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)
+  }
 }
 
+// Leaderboard
+export async function getLeaderboard() {
+  return await getSeasonTotals()
+}
+
+// Player weekly breakdown
 export async function getPlayerWeeklyBreakdown(playerId: number) {
   const playerTeams = await getTeamsByPlayerId(playerId)
-  const contestantIds = playerTeams.map(t => t.contestantId)
+  const contestantIds = playerTeams.map(team => team.contestantId)
   
-  const allScores = await getWeeklyScores()
-  const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
+  if (contestantIds.length === 0) return []
   
-  // Group by week
-  const weeklyBreakdown = playerScores.reduce((acc, score) => {
-    if (!acc[score.week]) {
-      acc[score.week] = []
-    }
-    acc[score.week].push(score)
-    return acc
-  }, {} as Record<number, any[]>)
+  const scores = await db.select({
+    week: weeklyScores.week,
+    contestantName: contestants.name,
+    category: weeklyScores.category,
+    points: weeklyScores.points,
+  })
+  .from(weeklyScores)
+  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
+  .where(sql`${weeklyScores.contestantId} = ANY(${contestantIds})`)
+  .orderBy(desc(weeklyScores.week), contestants.name)
   
-  return weeklyBreakdown
+  return scores
 }
 
-// Validation functions
-export async function validateWeeklyScoring(week: number, contestantId: number, category: string) {
-  // Check if contestant is eliminated
-  const contestant = await db.getContestantById(contestantId)
-  if (!contestant) return false
-  
-  if (contestant.eliminatedWeek && contestant.eliminatedWeek < week) {
-    return false
-  }
-  
-  // Check for duplicate winners (star_baker, technical_win, last_technical are unique per week)
-  if (['star_baker', 'technical_win', 'last_technical'].includes(category)) {
-    const existingScores = await getWeeklyScores(week)
-    const hasDuplicate = existingScores.some(score => 
-      score.category === category && score.contestantId !== contestantId
-    )
-    if (hasDuplicate) return false
-  }
-  
-  return true
-}
+// Alias for consistency
+export const getWeeklyScoresByWeek = getWeeklyScores
