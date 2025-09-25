@@ -1,6 +1,6 @@
 module.exports = {
-  // Default password: "yummybread"
-  AUTH_PASSWORD_HASH: '$2b$10$TmEUPNUwvpegRkz7HyL7zufVSVdTz2L80SiPmt0i8GAVvzgjFkvVG',
+  // Default password: "hollywoodhandshake"
+  AUTH_PASSWORD_HASH: '$2b$10$KTIKFAP1dOpdkx0WFFoXsOvTw/U87NLUHSCu.ymwAv1W4oTnLYOcC',
   IRON_SESSION_PASSWORD: 'gbbo-fantasy-league-secret-key-32chars',
   IRON_SESSION_COOKIE_NAME: 'gbbo_session',
   NEXTAUTH_URL: 'http://localhost:3000',
