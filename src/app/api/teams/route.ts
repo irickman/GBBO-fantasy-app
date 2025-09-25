@@ -1,27 +1,39 @@
 import { NextResponse } from 'next/server'
 import { getPlayers, getContestants } from '@/lib/db/queries'
 import { db } from '@/lib/db'
-import { teams, players, contestants } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
 
 export async function GET() {
   try {
-    // Get all teams with player and contestant information
-    const teamsWithDetails = await db.select({
-      teamId: teams.id,
-      playerId: teams.playerId,
-      playerName: players.name,
-      teamName: players.teamName,
-      contestantId: teams.contestantId,
-      contestantName: contestants.name,
-      eliminatedWeek: contestants.eliminatedWeek,
-    })
-    .from(teams)
-    .innerJoin(players, eq(teams.playerId, players.id))
-    .innerJoin(contestants, eq(teams.contestantId, contestants.id))
-    .orderBy(players.name, contestants.name)
+    const players = await getPlayers()
+    const contestants = await getContestants()
+    const allTeams = []
     
-    return NextResponse.json({ teams: teamsWithDetails })
+    // Get teams for each player
+    for (const player of players) {
+      const playerTeams = await db.getTeamsByPlayerId(player.id)
+      for (const team of playerTeams) {
+        const contestant = contestants.find(c => c.id === team.contestantId)
+        allTeams.push({
+          teamId: team.id,
+          playerId: team.playerId,
+          playerName: player.name,
+          teamName: player.teamName,
+          contestantId: team.contestantId,
+          contestantName: contestant?.name || 'Unknown',
+          eliminatedWeek: contestant?.eliminatedWeek || null
+        })
+      }
+    }
+    
+    // Sort by player name, then contestant name
+    allTeams.sort((a, b) => {
+      if (a.playerName !== b.playerName) {
+        return a.playerName.localeCompare(b.playerName)
+      }
+      return a.contestantName.localeCompare(b.contestantName)
+    })
+    
+    return NextResponse.json({ teams: allTeams })
   } catch (error) {
     console.error('Teams API error:', error)
     return NextResponse.json({ error: 'Failed to fetch teams' }, { status: 500 })

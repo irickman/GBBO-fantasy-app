@@ -1,200 +1,137 @@
 import { db } from './index'
-import { contestants, players, teams, weeklyScores, seasonTotals } from './schema'
-import { eq, and, desc, sql } from 'drizzle-orm'
 import { SCORING_CATEGORIES } from './index'
 
 // Contestants
 export async function createContestant(name: string, eliminatedWeek: number | null = null) {
-  const [contestant] = await db.insert(contestants).values({
-    name,
-    eliminatedWeek,
-  }).returning()
-  return contestant
+  return await db.createContestant(name, eliminatedWeek)
 }
 
 export async function getContestants() {
-  return await db.select().from(contestants).orderBy(contestants.name)
+  return await db.getContestants()
 }
 
 export async function getContestantById(id: number) {
-  const [contestant] = await db.select().from(contestants).where(eq(contestants.id, id))
-  return contestant || null
+  return await db.getContestantById(id)
 }
 
 export async function updateContestant(id: number, updates: { name?: string; eliminatedWeek?: number | null }) {
-  const [contestant] = await db.update(contestants)
-    .set(updates)
-    .where(eq(contestants.id, id))
-    .returning()
-  return contestant || null
+  return await db.updateContestant(id, updates)
 }
 
 export async function deleteContestant(id: number) {
-  const result = await db.delete(contestants).where(eq(contestants.id, id))
-  return result.rowCount > 0
+  return await db.deleteContestant(id)
 }
 
 // Players
 export async function createPlayer(name: string, teamName: string) {
-  const [player] = await db.insert(players).values({
-    name,
-    teamName,
-  }).returning()
-  return player
+  return await db.createPlayer(name, teamName)
 }
 
 export async function getPlayers() {
-  return await db.select().from(players).orderBy(players.name)
+  return await db.getPlayers()
 }
 
 export async function getPlayerById(id: number) {
-  const [player] = await db.select().from(players).where(eq(players.id, id))
-  return player || null
+  return await db.getPlayerById(id)
 }
 
 export async function updatePlayer(id: number, updates: { name?: string; teamName?: string }) {
-  const [player] = await db.update(players)
-    .set(updates)
-    .where(eq(players.id, id))
-    .returning()
-  return player || null
+  return await db.updatePlayer(id, updates)
 }
 
 export async function deletePlayer(id: number) {
-  const result = await db.delete(players).where(eq(players.id, id))
-  return result.rowCount > 0
+  return await db.deletePlayer(id)
 }
 
 // Teams
 export async function createTeam(playerId: number, contestantId: number) {
-  const [team] = await db.insert(teams).values({
-    playerId,
-    contestantId,
-  }).returning()
-  return team
+  return await db.createTeam(playerId, contestantId)
 }
 
 export async function getTeamsByPlayerId(playerId: number) {
-  return await db.select({
-    id: teams.id,
-    playerId: teams.playerId,
-    contestantId: teams.contestantId,
-    contestantName: contestants.name,
-    eliminatedWeek: contestants.eliminatedWeek,
-    createdAt: teams.createdAt,
+  const teams = await db.getTeamsByPlayerId(playerId)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to teams
+  return teams.map(team => {
+    const contestant = contestants.find(c => c.id === team.contestantId)
+    return {
+      ...team,
+      contestantName: contestant?.name || 'Unknown',
+      eliminatedWeek: contestant?.eliminatedWeek || null
+    }
   })
-  .from(teams)
-  .innerJoin(contestants, eq(teams.contestantId, contestants.id))
-  .where(eq(teams.playerId, playerId))
 }
 
 export async function updatePlayerTeam(playerId: number, contestantIds: number[]) {
-  // Delete existing teams for this player
-  await db.delete(teams).where(eq(teams.playerId, playerId))
-  
-  // Insert new teams
-  if (contestantIds.length > 0) {
-    await db.insert(teams).values(
-      contestantIds.map(contestantId => ({
-        playerId,
-        contestantId,
-      }))
-    )
-  }
+  return await db.updatePlayerTeam(playerId, contestantIds)
 }
 
 // Weekly Scores
 export async function createWeeklyScore(week: number, contestantId: number, category: string, points: number) {
-  const [score] = await db.insert(weeklyScores).values({
-    week,
-    contestantId,
-    category,
-    points,
-  }).returning()
-  return score
+  return await db.createWeeklyScore(week, contestantId, category, points)
 }
 
 export async function getWeeklyScores(week?: number) {
-  let query = db.select({
-    id: weeklyScores.id,
-    week: weeklyScores.week,
-    contestantId: weeklyScores.contestantId,
-    contestantName: contestants.name,
-    category: weeklyScores.category,
-    points: weeklyScores.points,
-    createdAt: weeklyScores.createdAt,
+  const scores = await db.getWeeklyScores(week)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to scores
+  return scores.map(score => {
+    const contestant = contestants.find(c => c.id === score.contestantId)
+    return {
+      ...score,
+      contestantName: contestant?.name || 'Unknown'
+    }
   })
-  .from(weeklyScores)
-  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
-  .orderBy(desc(weeklyScores.week), weeklyScores.category)
-
-  if (week !== undefined) {
-    query = query.where(eq(weeklyScores.week, week))
-  }
-
-  return await query
 }
 
 export async function getWeeklyScoreById(id: number) {
-  const [score] = await db.select({
-    id: weeklyScores.id,
-    week: weeklyScores.week,
-    contestantId: weeklyScores.contestantId,
-    contestantName: contestants.name,
-    category: weeklyScores.category,
-    points: weeklyScores.points,
-    createdAt: weeklyScores.createdAt,
-  })
-  .from(weeklyScores)
-  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
-  .where(eq(weeklyScores.id, id))
+  const score = await db.getWeeklyScoreById(id)
+  if (!score) return null
   
-  return score || null
+  const contestants = await db.getContestants()
+  const contestant = contestants.find(c => c.id === score.contestantId)
+  
+  return {
+    ...score,
+    contestantName: contestant?.name || 'Unknown'
+  }
 }
 
 export async function updateWeeklyScore(id: number, week: number, contestantId: number, category: string, points: number) {
-  const [score] = await db.update(weeklyScores)
-    .set({ week, contestantId, category, points })
-    .where(eq(weeklyScores.id, id))
-    .returning()
-  return score || null
+  return await db.updateWeeklyScore(id, week, contestantId, category, points)
 }
 
 export async function deleteWeeklyScore(id: number) {
-  const result = await db.delete(weeklyScores).where(eq(weeklyScores.id, id))
-  return result.rowCount > 0
+  return await db.deleteWeeklyScore(id)
 }
 
 // Season Totals
 export async function createSeasonTotal(data: { playerId: number; totalPoints: number }) {
-  const [total] = await db.insert(seasonTotals).values(data).returning()
-  return total
+  return await db.createSeasonTotal(data)
 }
 
 export async function getSeasonTotals() {
-  return await db.select({
-    id: seasonTotals.id,
-    playerId: seasonTotals.playerId,
-    playerName: players.name,
-    totalPoints: seasonTotals.totalPoints,
-    lastUpdated: seasonTotals.lastUpdated,
+  const totals = await db.getSeasonTotals()
+  const players = await db.getPlayers()
+  
+  // Add player names to season totals
+  return totals.map(total => {
+    const player = players.find(p => p.id === total.playerId)
+    return {
+      ...total,
+      playerName: player?.name || 'Unknown'
+    }
   })
-  .from(seasonTotals)
-  .innerJoin(players, eq(seasonTotals.playerId, players.id))
-  .orderBy(desc(seasonTotals.totalPoints))
 }
 
 export async function getSeasonTotalByPlayerId(playerId: number) {
-  const [total] = await db.select().from(seasonTotals).where(eq(seasonTotals.playerId, playerId))
-  return total || null
+  return await db.getSeasonTotalByPlayerId(playerId)
 }
 
 export async function updateSeasonTotal(playerId: number, updates: { totalPoints: number }) {
-  const [total] = await db.update(seasonTotals)
-    .set({ ...updates, lastUpdated: new Date() })
-    .where(eq(seasonTotals.playerId, playerId))
-    .returning()
-  return total || null
+  return await db.updateSeasonTotal(playerId, updates)
 }
 
 // Validation functions
@@ -220,14 +157,10 @@ export async function validateWeeklyScoring(week: number, contestantId: number, 
   // Check for duplicate winners (only one per week for certain categories)
   const restrictedCategories = ['star_baker', 'technical_win', 'last_technical']
   if (restrictedCategories.includes(category)) {
-    const existing = await db.select()
-      .from(weeklyScores)
-      .where(and(
-        eq(weeklyScores.week, week),
-        eq(weeklyScores.category, category)
-      ))
+    const existing = await db.getWeeklyScores(week)
+    const hasDuplicate = existing.some(score => score.category === category)
     
-    if (existing.length > 0) {
+    if (hasDuplicate) {
       return { valid: false, error: `Only one ${category} per week is allowed` }
     }
   }
@@ -260,13 +193,9 @@ export async function calculateSeasonTotals() {
     if (contestantIds.length === 0) continue
     
     // Calculate total points for this player
-    const scores = await db.select({
-      points: weeklyScores.points,
-    })
-    .from(weeklyScores)
-    .where(sql`${weeklyScores.contestantId} = ANY(${contestantIds})`)
-    
-    const totalPoints = scores.reduce((sum, score) => sum + score.points, 0)
+    const allScores = await db.getWeeklyScores()
+    const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
+    const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
     
     // Update or create season total
     const existing = await getSeasonTotalByPlayerId(player.id)
@@ -290,18 +219,20 @@ export async function getPlayerWeeklyBreakdown(playerId: number) {
   
   if (contestantIds.length === 0) return []
   
-  const scores = await db.select({
-    week: weeklyScores.week,
-    contestantName: contestants.name,
-    category: weeklyScores.category,
-    points: weeklyScores.points,
-  })
-  .from(weeklyScores)
-  .innerJoin(contestants, eq(weeklyScores.contestantId, contestants.id))
-  .where(sql`${weeklyScores.contestantId} = ANY(${contestantIds})`)
-  .orderBy(desc(weeklyScores.week), contestants.name)
+  const allScores = await db.getWeeklyScores()
+  const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
   
-  return scores
+  // Add contestant names
+  const contestants = await db.getContestants()
+  return playerScores.map(score => {
+    const contestant = contestants.find(c => c.id === score.contestantId)
+    return {
+      week: score.week,
+      contestantName: contestant?.name || 'Unknown',
+      category: score.category,
+      points: score.points
+    }
+  })
 }
 
 // Alias for consistency

@@ -1,13 +1,20 @@
-// Vercel Postgres database connection
-import { drizzle } from 'drizzle-orm/vercel-postgres'
-import { sql } from '@vercel/postgres'
-import * as schema from './schema'
+// Vercel Blob storage database connection
+import { blobDb } from './blob-storage'
 
-// Create the database connection
-export const db = drizzle(sql, { schema })
+// Export the blob database as the main database
+export const db = blobDb
 
-// Export schema for use in other files
-export * from './schema'
+// Database initialization function
+export async function initializeDatabase() {
+  try {
+    // Seed default data
+    await blobDb.seedDefaultData()
+    console.log('Database initialized with default data')
+  } catch (error) {
+    console.error('Database initialization error:', error)
+    throw error
+  }
+}
 
 // Scoring categories configuration
 export const SCORING_CATEGORIES = {
