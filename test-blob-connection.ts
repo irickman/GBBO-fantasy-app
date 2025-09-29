@@ -25,7 +25,7 @@ async function testConnection() {
       });
     }
   } catch (error) {
-    console.error('Connection failed:', error.message);
+    console.error('Connection failed:', error instanceof Error ? error.message : 'Unknown error');
   }
 }
 
