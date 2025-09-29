@@ -1,0 +1,7 @@
+{
+  "seasonId": "2025",
+  "weeks": [
+    { "week": 1, "scores": [{ "teamId": "Team A", "points": 15 }, { "teamId": "Team B", "points": 12 }] },
+    { "week": 2, "scores": [{ "teamId": "Team A", "points": 31 }, { "teamId": "Team B", "points": 25 }] }
+  ]
+}
