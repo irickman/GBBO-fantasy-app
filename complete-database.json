@@ -1,0 +1,443 @@
+{
+  "players": [
+    {
+      "id": 1,
+      "name": "Aleta",
+      "teamName": "The Baking Beauties",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 2,
+      "name": "Alex",
+      "teamName": "The Flour Power",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 3,
+      "name": "Anna",
+      "teamName": "The Sweet Success",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 4,
+      "name": "Annie",
+      "teamName": "The Rising Dough",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 5,
+      "name": "Ben",
+      "teamName": "The Knead for Speed",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 6,
+      "name": "Bob",
+      "teamName": "The Bread Winners",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 7,
+      "name": "Christine",
+      "teamName": "The Cake Crusaders",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 8,
+      "name": "Dani",
+      "teamName": "The Pastry Pioneers",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 9,
+      "name": "Emma",
+      "teamName": "The Dough-lightful",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 10,
+      "name": "Ira",
+      "teamName": "The Bake Believe",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 11,
+      "name": "Jake",
+      "teamName": "The Flourishing Bakers",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 12,
+      "name": "Jeremy",
+      "teamName": "The Sweet Dreams",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 13,
+      "name": "Maria",
+      "teamName": "The Rolling Pins",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 14,
+      "name": "Ruby",
+      "teamName": "The Batter Up",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 15,
+      "name": "Whiting",
+      "teamName": "The Knead to Know",
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    }
+  ],
+  "contestants": [
+    {
+      "id": 1,
+      "name": "Aaron",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 2,
+      "name": "Iain",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 3,
+      "name": "Jasmine",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 4,
+      "name": "Jessika",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 5,
+      "name": "Lesley",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 6,
+      "name": "Nadia",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 7,
+      "name": "Nataliia",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 8,
+      "name": "Pui Man",
+      "eliminatedWeek": 3,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 9,
+      "name": "Toby",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 10,
+      "name": "Tom",
+      "eliminatedWeek": null,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 11,
+      "name": "Hassan",
+      "eliminatedWeek": 1,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 12,
+      "name": "Leighton",
+      "eliminatedWeek": 2,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "playerId": 1,
+      "contestantId": 4,
+      "createdAt": "2025-09-29T05:58:02.048Z"
+    },
+    {
+      "id": 2,
+      "playerId": 1,
+      "contestantId": 1,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 3,
+      "playerId": 1,
+      "contestantId": 8,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 4,
+      "playerId": 2,
+      "contestantId": 4,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 5,
+      "playerId": 2,
+      "contestantId": 5,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 6,
+      "playerId": 2,
+      "contestantId": 9,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 7,
+      "playerId": 3,
+      "contestantId": 3,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 8,
+      "playerId": 3,
+      "contestantId": 2,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 9,
+      "playerId": 3,
+      "contestantId": 9,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 10,
+      "playerId": 4,
+      "contestantId": 2,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 11,
+      "playerId": 4,
+      "contestantId": 6,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 12,
+      "playerId": 4,
+      "contestantId": 8,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 13,
+      "playerId": 5,
+      "contestantId": 7,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 14,
+      "playerId": 5,
+      "contestantId": 2,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 15,
+      "playerId": 5,
+      "contestantId": 12,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 16,
+      "playerId": 6,
+      "contestantId": 10,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 17,
+      "playerId": 6,
+      "contestantId": 7,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 18,
+      "playerId": 6,
+      "contestantId": 8,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 19,
+      "playerId": 7,
+      "contestantId": 10,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 20,
+      "playerId": 7,
+      "contestantId": 7,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 21,
+      "playerId": 7,
+      "contestantId": 9,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 22,
+      "playerId": 8,
+      "contestantId": 10,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 23,
+      "playerId": 8,
+      "contestantId": 2,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 24,
+      "playerId": 8,
+      "contestantId": 6,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 25,
+      "playerId": 9,
+      "contestantId": 7,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 26,
+      "playerId": 9,
+      "contestantId": 6,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 27,
+      "playerId": 9,
+      "contestantId": 12,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 28,
+      "playerId": 10,
+      "contestantId": 4,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 29,
+      "playerId": 10,
+      "contestantId": 3,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 30,
+      "playerId": 10,
+      "contestantId": 5,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 31,
+      "playerId": 11,
+      "contestantId": 4,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 32,
+      "playerId": 11,
+      "contestantId": 3,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 33,
+      "playerId": 11,
+      "contestantId": 12,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 34,
+      "playerId": 12,
+      "contestantId": 3,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 35,
+      "playerId": 12,
+      "contestantId": 5,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 36,
+      "playerId": 12,
+      "contestantId": 12,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 37,
+      "playerId": 13,
+      "contestantId": 7,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 38,
+      "playerId": 13,
+      "contestantId": 1,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 39,
+      "playerId": 13,
+      "contestantId": 8,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 40,
+      "playerId": 14,
+      "contestantId": 10,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 41,
+      "playerId": 14,
+      "contestantId": 1,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 42,
+      "playerId": 14,
+      "contestantId": 9,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 43,
+      "playerId": 15,
+      "contestantId": 6,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 44,
+      "playerId": 15,
+      "contestantId": 1,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    },
+    {
+      "id": 45,
+      "playerId": 15,
+      "contestantId": 5,
+      "createdAt": "2025-09-29T05:58:02.049Z"
+    }
+  ],
+  "weeklyScores": [],
+  "seasonTotals": [],
+  "nextId": 46
+}

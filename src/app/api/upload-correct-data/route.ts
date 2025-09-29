@@ -146,7 +146,7 @@ export async function POST() {
     console.error('❌ Error uploading data:', error)
     return NextResponse.json({ 
       success: false, 
-      error: error.message 
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }
