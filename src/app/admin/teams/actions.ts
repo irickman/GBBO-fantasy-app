@@ -46,12 +46,17 @@ export async function updatePlayerTeamAction(formData: FormData) {
   const playerId = parseInt((formData.get('playerId') || '').toString())
   const contestantIds = (formData.get('contestantIds') || '').toString()
 
+  console.log('=== UPDATE PLAYER TEAM ACTION ===')
+  console.log('Player ID:', playerId)
+  console.log('Contestant IDs:', contestantIds)
+
   if (!playerId || !contestantIds) {
     return { ok: false, error: 'Player ID and contestant IDs are required' }
   }
 
   try {
     const selectedContestantIds = JSON.parse(contestantIds)
+    console.log('Parsed contestant IDs:', selectedContestantIds)
     
     if (selectedContestantIds.length !== 3) {
       return { ok: false, error: 'Exactly 3 contestants must be selected' }
@@ -59,15 +64,19 @@ export async function updatePlayerTeamAction(formData: FormData) {
 
     // Delete existing team assignments for this player
     const existingTeams = await getTeamsByPlayerId(playerId)
+    console.log('Existing teams to delete:', existingTeams)
     for (const team of existingTeams) {
+      console.log('Deleting team:', team.id)
       await deleteTeam(team.id)
     }
 
     // Create new team assignments
     for (const contestantId of selectedContestantIds) {
+      console.log('Creating team for contestant:', contestantId)
       await createTeam(playerId, contestantId)
     }
 
+    console.log('Team update completed, revalidating paths...')
     revalidatePath('/admin/teams')
     return { ok: true }
   } catch (error) {
@@ -126,7 +135,12 @@ export async function getAllContestantsAction() {
 
 export async function getPlayerTeamsAction(playerId: number) {
   try {
+    console.log('=== GET PLAYER TEAMS ACTION ===')
+    console.log('Player ID:', playerId)
+    
     const playerTeams = await getTeamsByPlayerId(playerId)
+    console.log('Raw player teams:', playerTeams)
+    
     const contestants = await getAllContestants()
     
     // Add contestant names to teams
@@ -138,6 +152,9 @@ export async function getPlayerTeamsAction(playerId: number) {
         contestantName: contestant?.name || 'Unknown'
       }
     })
+    
+    console.log('Teams with names:', teamsWithNames)
+    console.log('Number of teams found:', teamsWithNames.length)
     
     return { ok: true, teams: teamsWithNames }
   } catch (error) {
