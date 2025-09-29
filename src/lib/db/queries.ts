@@ -50,24 +50,18 @@ export async function createTeam(playerId: number, contestantId: number) {
 }
 
 export async function getTeamsByPlayerId(playerId: number) {
-  return await unstable_cache(
-    async () => {
-      const teams = await db.getTeamsByPlayerId(playerId)
-      const contestants = await db.getContestants()
-      
-      // Add contestant names to teams
-      return teams.map(team => {
-        const contestant = contestants.find(c => c.id === team.contestantId)
-        return {
-          ...team,
-          contestantName: contestant?.name || 'Unknown',
-          eliminatedWeek: contestant?.eliminatedWeek || null
-        }
-      })
-    },
-    [`teams-${playerId}`],
-    { tags: ['teams'] }
-  )()
+  const teams = await db.getTeamsByPlayerId(playerId)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to teams
+  return teams.map(team => {
+    const contestant = contestants.find(c => c.id === team.contestantId)
+    return {
+      ...team,
+      contestantName: contestant?.name || 'Unknown',
+      eliminatedWeek: contestant?.eliminatedWeek || null
+    }
+  })
 }
 
 export async function updatePlayerTeam(playerId: number, contestantIds: number[]) {
@@ -296,19 +290,11 @@ export const getWeeklyScoresByWeek = getWeeklyScores
 
 // Additional functions needed by the UI
 export async function getAllPlayers() {
-  return await unstable_cache(
-    async () => await getPlayers(),
-    ['players'],
-    { tags: ['players'] }
-  )()
+  return await getPlayers()
 }
 
 export async function getAllContestants() {
-  return await unstable_cache(
-    async () => await getContestants(),
-    ['contestants'],
-    { tags: ['contestants'] }
-  )()
+  return await getContestants()
 }
 
 export async function getAllTeams() {
