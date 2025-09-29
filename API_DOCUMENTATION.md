@@ -1,392 +1,417 @@
-# GBBO Fantasy League - Admin API Documentation
+# GBBO Fantasy League - TypeScript Server Actions Documentation
 
-This document describes the comprehensive CRUD APIs available for managing all aspects of the GBBO Fantasy League system.
+This document describes the comprehensive TypeScript server actions available for managing all aspects of the GBBO Fantasy League system.
 
-## Base URL
-All APIs are available at: `https://gbbo-fantasy.vercel.app/api/admin/`
+## Server Actions
+All server actions are TypeScript functions that can be called directly from React components using the `'use server'` directive.
 
 ## Authentication
-All admin APIs require authentication. Users must be logged in to access these endpoints.
+All server actions require authentication. Users must be logged in to access these functions.
 
 ---
 
 ## 1. Players Management
 
-### GET `/api/admin/players`
+### `getAllPlayersAction()`
 **Description:** Get all players
+**Usage:** `const result = await getAllPlayersAction()`
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "players": [
+  ok: true,
+  players: [
     {
-      "id": 1,
-      "name": "Player Name",
-      "teamName": "Team Name",
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      id: 1,
+      name: "Player Name",
+      teamName: "Team Name",
+      createdAt: Date
     }
   ]
 }
 ```
 
-### POST `/api/admin/players`
+### `createPlayerAction(formData: FormData)`
 **Description:** Create a new player
-**Body:**
-```json
-{
-  "name": "Player Name",
-  "teamName": "Team Name"
-}
+**Usage:** 
+```typescript
+const formData = new FormData()
+formData.append('name', 'Player Name')
+formData.append('teamName', 'Team Name')
+const result = await createPlayerAction(formData)
 ```
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "player": {
-    "id": 1,
-    "name": "Player Name",
-    "teamName": "Team Name",
-    "createdAt": "2025-01-01T00:00:00.000Z"
+  ok: true,
+  player: {
+    id: 1,
+    name: "Player Name",
+    teamName: "Team Name",
+    createdAt: Date
   }
 }
 ```
 
-### PUT `/api/admin/players`
+### `updatePlayerAction(formData: FormData)`
 **Description:** Update an existing player
-**Body:**
-```json
-{
-  "id": 1,
-  "name": "Updated Name",
-  "teamName": "Updated Team Name"
-}
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('id', '1')
+formData.append('name', 'Updated Name')
+formData.append('teamName', 'Updated Team Name')
+const result = await updatePlayerAction(formData)
 ```
 
-### DELETE `/api/admin/players?id=1`
+### `deletePlayerAction(formData: FormData)`
 **Description:** Delete a player
-**Query Parameters:** `id` - Player ID to delete
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('playerId', '1')
+const result = await deletePlayerAction(formData)
+```
 
 ---
 
 ## 2. Contestants Management
 
-### GET `/api/admin/contestants`
+### `getAllContestantsAction()`
 **Description:** Get all contestants
+**Usage:** `const result = await getAllContestantsAction()`
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "contestants": [
+  ok: true,
+  contestants: [
     {
-      "id": 1,
-      "name": "Contestant Name",
-      "eliminatedWeek": null,
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      id: 1,
+      name: "Contestant Name",
+      eliminatedWeek: 5
     }
   ]
 }
 ```
 
-### POST `/api/admin/contestants`
+### `createContestantAction(formData: FormData)`
 **Description:** Create a new contestant
-**Body:**
-```json
-{
-  "name": "Contestant Name",
-  "eliminatedWeek": null
-}
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('name', 'Contestant Name')
+formData.append('eliminatedWeek', '5')
+const result = await createContestantAction(formData)
 ```
 
-### PUT `/api/admin/contestants`
+### `updateContestantAction(formData: FormData)`
 **Description:** Update an existing contestant
-**Body:**
-```json
-{
-  "id": 1,
-  "name": "Updated Name",
-  "eliminatedWeek": 3
-}
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('id', '1')
+formData.append('name', 'Updated Name')
+formData.append('eliminatedWeek', '6')
+const result = await updateContestantAction(formData)
 ```
 
-### DELETE `/api/admin/contestants?id=1`
+### `deleteContestantAction(formData: FormData)`
 **Description:** Delete a contestant
-**Query Parameters:** `id` - Contestant ID to delete
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('id', '1')
+const result = await deleteContestantAction(formData)
+```
 
 ---
 
 ## 3. Team Assignments Management
 
-### GET `/api/admin/teams`
-**Description:** Get all teams or teams for a specific player
-**Query Parameters:** 
-- `playerId` (optional) - Get teams for specific player
+### `getPlayerTeamsAction(playerId: number)`
+**Description:** Get all team assignments for a specific player
+**Usage:** `const result = await getPlayerTeamsAction(1)`
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "teams": [
+  ok: true,
+  teams: [
     {
-      "id": 1,
-      "playerId": 1,
-      "contestantId": 1,
-      "contestantName": "Contestant Name",
-      "eliminatedWeek": null,
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      id: 1,
+      playerId: 1,
+      contestantId: 5,
+      teamId: 1,
+      contestantName: "Contestant Name"
     }
   ]
 }
 ```
 
-### POST `/api/admin/teams`
+### `createTeamAction(formData: FormData)`
 **Description:** Create a team assignment (assign contestant to player)
-**Body:**
-```json
-{
-  "playerId": 1,
-  "contestantId": 1
-}
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('playerId', '1')
+formData.append('contestantId', '5')
+const result = await createTeamAction(formData)
 ```
 
-### PUT `/api/admin/teams`
-**Description:** Update player's entire team (replace all contestants)
-**Body:**
-```json
-{
-  "playerId": 1,
-  "contestantIds": [1, 2, 3]
-}
+### `deleteTeamAction(formData: FormData)`
+**Description:** Delete a team assignment
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('teamId', '1')
+const result = await deleteTeamAction(formData)
 ```
-**Note:** Exactly 3 contestants must be provided.
 
-### DELETE `/api/admin/teams`
-**Description:** Delete team assignments
-**Query Parameters:**
-- `teamId` - Delete specific team assignment
-- `playerId` - Delete all assignments for a player
+### `updatePlayerTeamAction(formData: FormData)`
+**Description:** Update all team assignments for a player (replaces existing assignments)
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('playerId', '1')
+formData.append('contestantIds', JSON.stringify([5, 8, 12]))
+const result = await updatePlayerTeamAction(formData)
+```
 
 ---
 
 ## 4. Weekly Scores Management
 
-### GET `/api/admin/weekly-scores`
-**Description:** Get weekly scores
-**Query Parameters:**
-- `week` (optional) - Get scores for specific week
-- `id` (optional) - Get specific score by ID
+### `getWeeklyScoresAction(week: number)`
+**Description:** Get all scores for a specific week
+**Usage:** `const result = await getWeeklyScoresAction(2)`
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "scores": [
+  ok: true,
+  scores: [
     {
-      "id": 1,
-      "week": 2,
-      "contestantId": 1,
-      "contestantName": "Contestant Name",
-      "category": "star_baker",
-      "points": 4,
-      "createdAt": "2025-01-01T00:00:00.000Z"
+      id: 1,
+      week: 2,
+      contestantId: 5,
+      category: "star_baker",
+      points: 3,
+      contestantName: "Contestant Name"
     }
   ]
 }
 ```
 
-### POST `/api/admin/weekly-scores`
-**Description:** Create a new weekly score
-**Body:**
-```json
-{
-  "week": 2,
-  "contestantId": 1,
-  "category": "star_baker",
-  "points": 4
-}
+### `addScoreAction(formData: FormData)`
+**Description:** Add a new weekly score
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('week', '2')
+formData.append('contestantId', '5')
+formData.append('category', 'star_baker')
+const result = await addScoreAction(formData)
 ```
 
-### PUT `/api/admin/weekly-scores`
+### `updateScoreAction(formData: FormData)`
 **Description:** Update an existing weekly score
-**Body:**
-```json
-{
-  "id": 1,
-  "week": 2,
-  "contestantId": 1,
-  "category": "technical_win",
-  "points": 3
-}
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('scoreId', '1')
+formData.append('contestantId', '8')
+formData.append('category', 'technical')
+const result = await updateScoreAction(formData)
 ```
 
-### DELETE `/api/admin/weekly-scores?id=1`
+### `deleteScoreAction(formData: FormData)`
 **Description:** Delete a weekly score
-**Query Parameters:** `id` - Score ID to delete
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('scoreId', '1')
+const result = await deleteScoreAction(formData)
+```
+
+### `getContestantsAction()`
+**Description:** Get all contestants (for scoring page)
+**Usage:** `const result = await getContestantsAction()`
 
 ---
 
 ## 5. Season Totals Management
 
-### GET `/api/admin/season-totals`
-**Description:** Get season totals
-**Query Parameters:**
-- `playerId` (optional) - Get totals for specific player
+### `getAllSeasonTotalsAction()`
+**Description:** Get all season totals
+**Usage:** `const result = await getAllSeasonTotalsAction()`
 **Response:**
-```json
+```typescript
 {
-  "success": true,
-  "totals": [
+  ok: true,
+  totals: [
     {
-      "id": 1,
-      "playerId": 1,
-      "playerName": "Player Name",
-      "week": 2,
-      "contestantId": 1,
-      "contestantName": "Contestant Name",
-      "points": 4,
-      "runningTotal": 12,
-      "lastUpdated": "2025-01-01T00:00:00.000Z"
+      id: 1,
+      playerId: 1,
+      week: 2,
+      contestantId: 5,
+      points: 3,
+      runningTotal: 6,
+      playerName: "Player Name",
+      contestantName: "Contestant Name",
+      lastUpdated: Date
     }
   ]
 }
 ```
 
-### POST `/api/admin/season-totals`
-**Description:** Calculate and update season totals
-**Body:**
-```json
-{
-  "playerId": 1,
-  "week": 2
-}
-```
-**Note:** This will recalculate totals based on weekly scores.
+### `getSeasonTotalsByPlayerAction(playerId: number)`
+**Description:** Get season totals for a specific player
+**Usage:** `const result = await getSeasonTotalsByPlayerAction(1)`
 
-### PUT `/api/admin/season-totals`
-**Description:** Update season total manually
-**Body:**
-```json
-{
-  "playerId": 1,
-  "totalPoints": 25
-}
+### `createSeasonTotalAction(formData: FormData)`
+**Description:** Create a new season total entry
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('playerId', '1')
+formData.append('week', '2')
+formData.append('contestantId', '5')
+formData.append('points', '3')
+formData.append('runningTotal', '6')
+const result = await createSeasonTotalAction(formData)
 ```
 
----
-
-## Data Structure Overview
-
-### JSON Storage Format
-The system uses a simple JSON structure stored in Vercel Blob storage:
-
-```json
-{
-  "players": [
-    {
-      "id": 1,
-      "name": "Player Name",
-      "teamName": "Team Name",
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    }
-  ],
-  "contestants": [
-    {
-      "id": 1,
-      "name": "Contestant Name",
-      "eliminatedWeek": null,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    }
-  ],
-  "teams": [
-    {
-      "id": 1,
-      "playerId": 1,
-      "contestantId": 1,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    }
-  ],
-  "weeklyScores": [
-    {
-      "id": 1,
-      "week": 2,
-      "contestantId": 1,
-      "category": "star_baker",
-      "points": 4,
-      "createdAt": "2025-01-01T00:00:00.000Z"
-    }
-  ],
-  "seasonTotals": [
-    {
-      "id": 1,
-      "playerId": 1,
-      "week": 2,
-      "contestantId": 1,
-      "points": 4,
-      "runningTotal": 12,
-      "lastUpdated": "2025-01-01T00:00:00.000Z"
-    }
-  ],
-  "nextId": 1
-}
+### `updateSeasonTotalAction(formData: FormData)`
+**Description:** Update an existing season total
+**Usage:**
+```typescript
+const formData = new FormData()
+formData.append('id', '1')
+formData.append('points', '5')
+formData.append('runningTotal', '10')
+const result = await updateSeasonTotalAction(formData)
 ```
 
-### Season Totals Structure
-The season totals are organized by:
-- **Week**: Each week has separate entries
-- **Player**: Each player has separate entries per week
-- **Contestant**: Each contestant has separate entries per week
-- **Points**: Points earned by the contestant in that week
-- **Running Total**: Cumulative total for the player through that week
-
-This structure allows for:
-- Weekly breakdowns by player and contestant
-- Running totals that accumulate through the season
-- Easy calculation of leaderboards and rankings
+### `recalculateSeasonTotalsAction()`
+**Description:** Recalculate all season totals from weekly scores
+**Usage:** `const result = await recalculateSeasonTotalsAction()`
 
 ---
 
 ## Error Handling
-All APIs return consistent error responses:
 
-```json
+All server actions return a consistent response format:
+
+**Success Response:**
+```typescript
 {
-  "success": false,
-  "error": "Error message describing what went wrong"
+  ok: true,
+  [data]: any // The actual data returned
 }
 ```
 
-Common HTTP status codes:
-- `200` - Success
-- `400` - Bad Request (missing required fields)
-- `404` - Not Found (resource doesn't exist)
-- `500` - Internal Server Error
-
----
-
-## Usage Examples
-
-### Create a Player and Assign Contestants
-```bash
-# 1. Create a player
-curl -X POST https://gbbo-fantasy.vercel.app/api/admin/players \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Dani", "teamName": "Danis Dream Team"}'
-
-# 2. Assign 3 contestants to the player
-curl -X PUT https://gbbo-fantasy.vercel.app/api/admin/teams \
-  -H "Content-Type: application/json" \
-  -d '{"playerId": 1, "contestantIds": [1, 2, 3]}'
+**Error Response:**
+```typescript
+{
+  ok: false,
+  error: string // Error message
+}
 ```
 
-### Add Weekly Scores
-```bash
-# Add a star baker score for week 2
-curl -X POST https://gbbo-fantasy.vercel.app/api/admin/weekly-scores \
-  -H "Content-Type: application/json" \
-  -d '{"week": 2, "contestantId": 1, "category": "star_baker", "points": 4}'
+## Usage in React Components
+
+```typescript
+'use client'
+
+import { getAllPlayersAction, createPlayerAction } from '@/app/admin/teams/actions'
+
+export default function PlayersComponent() {
+  const [players, setPlayers] = useState([])
+
+  const loadPlayers = async () => {
+    const result = await getAllPlayersAction()
+    if (result.ok) {
+      setPlayers(result.players)
+    } else {
+      console.error(result.error)
+    }
+  }
+
+  const addPlayer = async (formData: FormData) => {
+    const result = await createPlayerAction(formData)
+    if (result.ok) {
+      await loadPlayers() // Refresh the list
+    } else {
+      console.error(result.error)
+    }
+  }
+
+  return (
+    // Component JSX
+  )
+}
 ```
 
-### Calculate Season Totals
-```bash
-# Recalculate all season totals
-curl -X POST https://gbbo-fantasy.vercel.app/api/admin/season-totals \
-  -H "Content-Type: application/json" \
-  -d '{}'
+## Data Models
+
+### Player
+```typescript
+{
+  id: number
+  name: string
+  teamName: string
+  createdAt: Date
+}
 ```
+
+### Contestant
+```typescript
+{
+  id: number
+  name: string
+  eliminatedWeek: number | null
+}
+```
+
+### Team Assignment
+```typescript
+{
+  id: number
+  playerId: number
+  contestantId: number
+  contestantName?: string // Added when fetching with names
+}
+```
+
+### Weekly Score
+```typescript
+{
+  id: number
+  week: number
+  contestantId: number
+  category: string
+  points: number
+  contestantName?: string // Added when fetching with names
+}
+```
+
+### Season Total
+```typescript
+{
+  id: number
+  playerId: number
+  week: number
+  contestantId: number
+  points: number
+  runningTotal: number
+  lastUpdated: Date
+  playerName?: string // Added when fetching with names
+  contestantName?: string // Added when fetching with names
+}
+```
+
+## Scoring Categories
+
+Available scoring categories:
+- `star_baker`: 3 points
+- `technical`: 2 points
+- `show_stopper`: 2 points
+- `signature`: 1 point
+- `eliminated`: 0 points
