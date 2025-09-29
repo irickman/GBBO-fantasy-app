@@ -405,6 +405,18 @@ export const blobDb = {
     return data.seasonTotals[index]
   },
 
+  async deleteSeasonTotal(id: number): Promise<boolean> {
+    const data = await getData()
+    const initialLength = data.seasonTotals.length
+    data.seasonTotals = data.seasonTotals.filter(s => s.id !== id)
+    
+    if (data.seasonTotals.length < initialLength) {
+      await saveData(data)
+      return true
+    }
+    return false
+  },
+
   // Seed default data
   async seedDefaultData(): Promise<void> {
     const data = await getData()

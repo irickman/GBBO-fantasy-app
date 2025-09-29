@@ -151,6 +151,10 @@ export async function updateSeasonTotal(id: number, updates: { points?: number; 
   return await db.updateSeasonTotal(id, updates)
 }
 
+export async function deleteSeasonTotal(id: number) {
+  return await db.deleteSeasonTotal(id)
+}
+
 // Validation functions
 export async function validateContestantElimination(contestantId: number, week: number): Promise<boolean> {
   const contestant = await getContestantById(contestantId)
@@ -201,6 +205,13 @@ export async function getWeekStatus(week: number): Promise<'complete' | 'current
 // Season totals calculation
 export async function calculateSeasonTotals() {
   const allPlayers = await getPlayers()
+  const allScores = await db.getWeeklyScores()
+  
+  // Clear existing season totals
+  const existingTotals = await getSeasonTotals()
+  for (const total of existingTotals) {
+    await db.deleteSeasonTotal(total.id)
+  }
   
   for (const player of allPlayers) {
     // Get all teams for this player
@@ -209,17 +220,38 @@ export async function calculateSeasonTotals() {
     
     if (contestantIds.length === 0) continue
     
-    // Calculate total points for this player
-    const allScores = await db.getWeeklyScores()
-    const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
-    const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
+    // Group scores by week and contestant
+    const weeklyTotals: Record<number, Record<number, number>> = {}
+    let runningTotal = 0
     
-    // Update or create season total
-    const existing = await getSeasonTotalByPlayerId(player.id)
-    if (existing) {
-      await updateSeasonTotal(player.id, { totalPoints })
-    } else {
-      await createSeasonTotal({ playerId: player.id, totalPoints })
+    // Process each week
+    for (let week = 1; week <= 10; week++) {
+      const weekScores = allScores.filter(score => 
+        score.week === week && contestantIds.includes(score.contestantId)
+      )
+      
+      if (weekScores.length > 0) {
+        weeklyTotals[week] = {}
+        
+        for (const contestantId of contestantIds) {
+          const contestantWeekScores = weekScores.filter(score => score.contestantId === contestantId)
+          const contestantWeekPoints = contestantWeekScores.reduce((sum, score) => sum + score.points, 0)
+          
+          if (contestantWeekPoints > 0) {
+            runningTotal += contestantWeekPoints
+            weeklyTotals[week][contestantId] = contestantWeekPoints
+            
+            // Create season total entry
+            await createSeasonTotal({
+              playerId: player.id,
+              week,
+              contestantId,
+              points: contestantWeekPoints,
+              runningTotal
+            })
+          }
+        }
+      }
     }
   }
 }
