@@ -206,7 +206,15 @@ export const blobDb = {
   },
 
   async getContestants(): Promise<Contestant[]> {
+    console.log('=== BLOB DB GET CONTESTANTS ===')
     const data = await getData()
+    console.log('Data from blob storage:', {
+      contestants: data.contestants.length,
+      players: data.players.length,
+      teams: data.teams.length,
+      nextId: data.nextId
+    })
+    console.log('Contestants list:', data.contestants.map(c => ({ id: c.id, name: c.name, eliminatedWeek: c.eliminatedWeek })))
     return data.contestants
   },
 

@@ -85,7 +85,10 @@ export async function deleteContestantAction(formData: FormData) {
 
 export async function getAllContestantsAction() {
   try {
+    console.log('=== GET ALL CONTESTANTS ACTION ===')
     const contestants = await getAllContestants()
+    console.log('Retrieved contestants:', contestants.length)
+    console.log('Contestants data:', contestants.map(c => ({ id: c.id, name: c.name, eliminatedWeek: c.eliminatedWeek })))
     return { ok: true, contestants }
   } catch (error) {
     console.error('getAllContestantsAction error', error)
