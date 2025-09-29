@@ -201,15 +201,29 @@ export async function deleteTeamAction(formData: FormData) {
 export async function deletePlayerAction(formData: FormData) {
   const playerId = parseInt((formData.get('playerId') || '').toString())
   
+  console.log('=== DELETE PLAYER ACTION ===')
+  console.log('Player ID to delete:', playerId)
+  console.log('Form data:', Object.fromEntries(formData.entries()))
+  
   if (!playerId) {
+    console.log('No player ID provided')
     return { ok: false, error: 'Player ID is required' }
   }
 
   try {
-    await deletePlayer(playerId)
-    revalidatePath('/admin/teams')
-    revalidatePath('/dashboard')
-    return { ok: true }
+    console.log('Attempting to delete player with ID:', playerId)
+    const result = await deletePlayer(playerId)
+    console.log('Delete player result:', result)
+    
+    if (result) {
+      console.log('Player deleted successfully, revalidating paths...')
+      revalidatePath('/admin/teams')
+      revalidatePath('/dashboard')
+      return { ok: true }
+    } else {
+      console.log('Player not found or deletion failed')
+      return { ok: false, error: 'Player not found or deletion failed' }
+    }
   } catch (error) {
     console.error('deletePlayerAction error', error)
     return { ok: false, error: 'Failed to delete player' }
