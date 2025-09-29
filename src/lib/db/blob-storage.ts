@@ -64,19 +64,14 @@ const defaultData: DatabaseData = {
 async function getData(): Promise<DatabaseData> {
   try {
     console.log('Fetching data from blob storage...')
-    const { blobs } = await list({ prefix: 'database/' })
-    console.log('Found blobs:', blobs.map(b => b.pathname))
-    const dataBlob = blobs.find(blob => blob.pathname === 'database/data.json')
     
-    if (!dataBlob) {
-      console.log('No data blob found, returning default data')
-      return defaultData
-    }
+    // Use direct URL instead of listing blobs to avoid confusion
+    const dataUrl = 'https://szyuihqvww7iktlw.public.blob.vercel-storage.com/database/data.json'
+    console.log('Fetching from direct URL:', dataUrl)
     
-    console.log('Found data blob:', dataBlob.pathname)
-    
-    const response = await fetch(dataBlob.url)
+    const response = await fetch(dataUrl)
     if (!response.ok) {
+      console.log('Failed to fetch data, returning default data')
       return defaultData
     }
     
@@ -133,12 +128,14 @@ async function saveData(data: DatabaseData): Promise<void> {
       nextId: data.nextId
     })
     
+    // Use specific filename to ensure we're always using the same blob
     const result = await put('database/data.json', JSON.stringify(data, null, 2), {
       access: 'public',
       addRandomSuffix: false
     })
     
     console.log('Data saved to blob storage successfully:', result.url)
+    console.log('Expected URL should be: https://szyuihqvww7iktlw.public.blob.vercel-storage.com/database/data.json')
   } catch (error) {
     console.error('Error saving data to blob storage:', error)
     throw error
