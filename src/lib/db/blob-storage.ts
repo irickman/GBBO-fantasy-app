@@ -284,15 +284,27 @@ export const blobDb = {
 
   // Teams
   async createTeam(playerId: number, contestantId: number): Promise<Team> {
+    console.log('=== BLOB DB CREATE TEAM ===')
+    console.log('Player ID:', playerId)
+    console.log('Contestant ID:', contestantId)
+    
     const data = await getData()
+    console.log('Current teams count:', data.teams.length)
+    console.log('Next ID will be:', data.nextId)
+    
     const team: Team = {
       id: data.nextId++,
       playerId,
       contestantId,
       createdAt: new Date()
     }
+    
+    console.log('Created team:', team)
     data.teams.push(team)
+    console.log('Teams after push:', data.teams.length)
+    
     await saveData(data)
+    console.log('Team saved successfully')
     return team
   },
 
