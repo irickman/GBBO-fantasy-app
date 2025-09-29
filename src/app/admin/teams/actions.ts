@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createPlayer, getAllPlayers, getAllContestants, getAllTeams, getTeamsByPlayerId, deletePlayer, createTeam, deleteTeam } from '@/lib/db/queries'
+import { createPlayer, getAllPlayers, getAllContestants, getAllTeams, getTeamsByPlayerId, deletePlayer, createTeam, deleteTeam, updatePlayer } from '@/lib/db/queries'
 
 export async function createPlayerAction(formData: FormData) {
   const name = (formData.get('name') || '').toString().trim()
@@ -11,12 +11,34 @@ export async function createPlayerAction(formData: FormData) {
   }
 
   try {
-    await createPlayer(name, teamName)
+    const player = await createPlayer(name, teamName)
     revalidatePath('/admin/teams')
-    return { ok: true }
+    return { ok: true, player }
   } catch (error) {
     console.error('createPlayerAction error', error)
     return { ok: false, error: 'Failed to create player' }
+  }
+}
+
+export async function updatePlayerAction(formData: FormData) {
+  const id = parseInt((formData.get('id') || '').toString())
+  const name = (formData.get('name') || '').toString().trim()
+  const teamName = (formData.get('teamName') || '').toString().trim()
+  
+  if (!id || !name || !teamName) {
+    return { ok: false, error: 'Player ID, name and team name are required' }
+  }
+
+  try {
+    const player = await updatePlayer(id, { name, teamName })
+    if (!player) {
+      return { ok: false, error: 'Player not found' }
+    }
+    revalidatePath('/admin/teams')
+    return { ok: true, player }
+  } catch (error) {
+    console.error('updatePlayerAction error', error)
+    return { ok: false, error: 'Failed to update player' }
   }
 }
 
@@ -121,6 +143,41 @@ export async function getPlayerTeamsAction(playerId: number) {
   } catch (error) {
     console.error('getPlayerTeamsAction error', error)
     return { ok: false, error: 'Failed to fetch player teams' }
+  }
+}
+
+export async function createTeamAction(formData: FormData) {
+  const playerId = parseInt((formData.get('playerId') || '').toString())
+  const contestantId = parseInt((formData.get('contestantId') || '').toString())
+  
+  if (!playerId || !contestantId) {
+    return { ok: false, error: 'Player ID and Contestant ID are required' }
+  }
+
+  try {
+    const team = await createTeam(playerId, contestantId)
+    revalidatePath('/admin/teams')
+    return { ok: true, team }
+  } catch (error) {
+    console.error('createTeamAction error', error)
+    return { ok: false, error: 'Failed to create team assignment' }
+  }
+}
+
+export async function deleteTeamAction(formData: FormData) {
+  const teamId = parseInt((formData.get('teamId') || '').toString())
+  
+  if (!teamId) {
+    return { ok: false, error: 'Team ID is required' }
+  }
+
+  try {
+    const result = await deleteTeam(teamId)
+    revalidatePath('/admin/teams')
+    return { ok: true, result }
+  } catch (error) {
+    console.error('deleteTeamAction error', error)
+    return { ok: false, error: 'Failed to delete team assignment' }
   }
 }
 

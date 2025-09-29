@@ -58,22 +58,12 @@ export async function updateContestantAction(formData: FormData) {
 export async function deleteContestantAction(formData: FormData) {
   const id = parseInt((formData.get('id') || '').toString())
   
-  console.log('=== DELETE CONTESTANT ACTION ===')
-  console.log('Raw form data:', Object.fromEntries(formData.entries()))
-  console.log('Parsed ID:', id)
-  console.log('ID type:', typeof id)
-  console.log('ID is valid:', !isNaN(id) && id > 0)
-  
   if (!id || isNaN(id)) {
-    console.log('Invalid ID provided')
     return { ok: false, error: 'Contestant ID is required' }
   }
 
   try {
-    console.log('Attempting to delete contestant with ID:', id)
     const result = await deleteContestant(id)
-    console.log('Delete result:', result)
-    
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')
     return { ok: true, result }
@@ -85,10 +75,7 @@ export async function deleteContestantAction(formData: FormData) {
 
 export async function getAllContestantsAction() {
   try {
-    console.log('=== GET ALL CONTESTANTS ACTION ===')
     const contestants = await getAllContestants()
-    console.log('Retrieved contestants:', contestants.length)
-    console.log('Contestants data:', contestants.map(c => ({ id: c.id, name: c.name, eliminatedWeek: c.eliminatedWeek })))
     return { ok: true, contestants }
   } catch (error) {
     console.error('getAllContestantsAction error', error)
