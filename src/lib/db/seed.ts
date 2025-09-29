@@ -29,21 +29,21 @@ export async function seedDatabase() {
 
     // 2. Create Players and their Teams
     const playersData = [
-      { name: 'Aleta', teamName: 'Aleta\'s Aces', contestants: ['Jessika', 'Aaron', 'Pui Man'] },
-      { name: 'Alex', teamName: 'Alex\'s Alchemists', contestants: ['Jessika', 'Lesley', 'Toby'] },
-      { name: 'Anna', teamName: 'Anna\'s Artisans', contestants: ['Jasmine', 'Iain', 'Toby'] },
-      { name: 'Annie', teamName: 'Annie\'s Angels', contestants: ['Iain', 'Nadia', 'Pui Man'] },
-      { name: 'Ben', teamName: 'Ben\'s Bakes', contestants: ['Nataliia', 'Iain', 'Leighton'] },
-      { name: 'Bob', teamName: 'Bob\'s Best', contestants: ['Tom', 'Nataliia', 'Pui Man'] },
-      { name: 'Christine', teamName: 'Christine\'s Creations', contestants: ['Tom', 'Nataliia', 'Toby'] },
-      { name: 'Dani', teamName: 'Dani\'s Delights', contestants: ['Tom', 'Iain', 'Nadia'] },
-      { name: 'Emma', teamName: 'Emma\'s Edibles', contestants: ['Nataliia', 'Nadia', 'Leighton'] },
-      { name: 'Ira', teamName: 'Ira\'s Icing', contestants: ['Jessika', 'Jasmine', 'Lesley'] },
-      { name: 'Jake', teamName: 'Jake\'s Jellies', contestants: ['Jessika', 'Jasmine', 'Leighton'] },
-      { name: 'Jeremy', teamName: 'Jeremy\'s Jewels', contestants: ['Jasmine', 'Lesley', 'Leighton'] },
-      { name: 'Maria', teamName: 'Maria\'s Marvels', contestants: ['Nataliia', 'Aaron', 'Pui Man'] },
-      { name: 'Ruby', teamName: 'Ruby\'s Roulades', contestants: ['Tom', 'Aaron', 'Toby'] },
-      { name: 'Whiting', teamName: 'Whiting\'s Wonders', contestants: ['Nadia', 'Aaron', 'Lesley'] },
+      { name: 'Aleta', teamName: 'The Baking Beauties', contestants: ['Jessika', 'Aaron', 'Pui Man'] },
+      { name: 'Alex', teamName: 'The Flour Power', contestants: ['Jessika', 'Lesley', 'Toby'] },
+      { name: 'Anna', teamName: 'The Sweet Success', contestants: ['Jasmine', 'Iain', 'Toby'] },
+      { name: 'Annie', teamName: 'The Rising Dough', contestants: ['Iain', 'Nadia', 'Pui Man'] },
+      { name: 'Ben', teamName: 'The Knead for Speed', contestants: ['Nataliia', 'Iain', 'Leighton'] },
+      { name: 'Bob', teamName: 'The Bread Winners', contestants: ['Tom', 'Nataliia', 'Pui Man'] },
+      { name: 'Christine', teamName: 'The Cake Crusaders', contestants: ['Tom', 'Nataliia', 'Toby'] },
+      { name: 'Dani', teamName: 'The Pastry Pioneers', contestants: ['Tom', 'Iain', 'Nadia'] },
+      { name: 'Emma', teamName: 'The Dough-lightful', contestants: ['Nataliia', 'Nadia', 'Leighton'] },
+      { name: 'Ira', teamName: 'The Bake Believe', contestants: ['Jessika', 'Jasmine', 'Lesley'] },
+      { name: 'Jake', teamName: 'The Flourishing Bakers', contestants: ['Jessika', 'Jasmine', 'Leighton'] },
+      { name: 'Jeremy', teamName: 'The Sweet Dreams', contestants: ['Jasmine', 'Lesley', 'Leighton'] },
+      { name: 'Maria', teamName: 'The Rolling Pins', contestants: ['Nataliia', 'Aaron', 'Pui Man'] },
+      { name: 'Ruby', teamName: 'The Batter Up', contestants: ['Tom', 'Aaron', 'Toby'] },
+      { name: 'Whiting', teamName: 'The Knead to Know', contestants: ['Nadia', 'Aaron', 'Lesley'] },
     ]
 
     for (const p of playersData) {
