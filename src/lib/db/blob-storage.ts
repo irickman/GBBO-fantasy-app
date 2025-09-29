@@ -226,16 +226,35 @@ export const blobDb = {
   },
 
   async deleteContestant(id: number): Promise<boolean> {
+    console.log('=== BLOB DB DELETE CONTESTANT ===')
+    console.log('Delete contestant ID:', id)
+    
     const data = await getData()
+    console.log('Current contestants:', data.contestants.length)
+    console.log('Current contestants list:', data.contestants.map(c => ({ id: c.id, name: c.name })))
+    
     const initialLength = data.contestants.length
+    const contestantToDelete = data.contestants.find(c => c.id === id)
+    console.log('Contestant to delete found:', !!contestantToDelete)
+    if (contestantToDelete) {
+      console.log('Contestant details:', contestantToDelete)
+    }
+    
     data.contestants = data.contestants.filter(c => c.id !== id)
     data.teams = data.teams.filter(t => t.contestantId !== id)
     data.weeklyScores = data.weeklyScores.filter(w => w.contestantId !== id)
     
+    console.log('After filtering - contestants:', data.contestants.length)
+    console.log('After filtering - teams:', data.teams.length)
+    console.log('After filtering - weekly scores:', data.weeklyScores.length)
+    
     if (data.contestants.length < initialLength) {
+      console.log('Contestant was found and removed, saving data...')
       await saveData(data)
+      console.log('Data saved successfully')
       return true
     }
+    console.log('No contestant was removed')
     return false
   },
 

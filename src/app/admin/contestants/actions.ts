@@ -58,15 +58,25 @@ export async function updateContestantAction(formData: FormData) {
 export async function deleteContestantAction(formData: FormData) {
   const id = parseInt((formData.get('id') || '').toString())
   
-  if (!id) {
+  console.log('=== DELETE CONTESTANT ACTION ===')
+  console.log('Raw form data:', Object.fromEntries(formData.entries()))
+  console.log('Parsed ID:', id)
+  console.log('ID type:', typeof id)
+  console.log('ID is valid:', !isNaN(id) && id > 0)
+  
+  if (!id || isNaN(id)) {
+    console.log('Invalid ID provided')
     return { ok: false, error: 'Contestant ID is required' }
   }
 
   try {
-    await deleteContestant(id)
+    console.log('Attempting to delete contestant with ID:', id)
+    const result = await deleteContestant(id)
+    console.log('Delete result:', result)
+    
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')
-    return { ok: true }
+    return { ok: true, result }
   } catch (error) {
     console.error('deleteContestantAction error', error)
     return { ok: false, error: 'Failed to delete contestant' }
