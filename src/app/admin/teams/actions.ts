@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { createPlayer, getAllPlayers, getAllContestants, getAllTeams, getTeamsByPlayerId, deletePlayer, createTeam, deleteTeam, updatePlayer } from '@/lib/db/queries'
 
 export async function createPlayerAction(formData: FormData) {
@@ -13,6 +13,9 @@ export async function createPlayerAction(formData: FormData) {
   try {
     const player = await createPlayer(name, teamName)
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('players')
+    revalidateTag('teams')
     return { ok: true, player }
   } catch (error) {
     console.error('createPlayerAction error', error)
@@ -35,6 +38,8 @@ export async function updatePlayerAction(formData: FormData) {
       return { ok: false, error: 'Player not found' }
     }
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('players')
     return { ok: true, player }
   } catch (error) {
     console.error('updatePlayerAction error', error)
@@ -78,6 +83,8 @@ export async function updatePlayerTeamAction(formData: FormData) {
 
     console.log('Team update completed, revalidating paths...')
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('teams')
     return { ok: true }
   } catch (error) {
     console.error('updatePlayerTeamAction error', error)
@@ -106,6 +113,8 @@ export async function assignContestantsAction(formData: FormData) {
     }
     
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('teams')
     return { ok: true }
   } catch (error) {
     console.error('assignContestantsAction error', error)
@@ -174,6 +183,8 @@ export async function createTeamAction(formData: FormData) {
   try {
     const team = await createTeam(playerId, contestantId)
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('teams')
     return { ok: true, team }
   } catch (error) {
     console.error('createTeamAction error', error)
@@ -191,6 +202,8 @@ export async function deleteTeamAction(formData: FormData) {
   try {
     const result = await deleteTeam(teamId)
     revalidatePath('/admin/teams')
+    revalidatePath('/dashboard')
+    revalidateTag('teams')
     return { ok: true, result }
   } catch (error) {
     console.error('deleteTeamAction error', error)
@@ -219,6 +232,8 @@ export async function deletePlayerAction(formData: FormData) {
       console.log('Player deleted successfully, revalidating paths...')
       revalidatePath('/admin/teams')
       revalidatePath('/dashboard')
+      revalidateTag('players')
+      revalidateTag('teams')
       return { ok: true }
     } else {
       console.log('Player not found or deletion failed')

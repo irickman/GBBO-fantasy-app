@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { 
   createContestant, 
   getAllContestants, 
@@ -23,6 +23,7 @@ export async function createContestantAction(formData: FormData) {
     )
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')
+    revalidateTag('contestants')
     return { ok: true, contestant }
   } catch (error) {
     console.error('createContestantAction error', error)
@@ -48,6 +49,7 @@ export async function updateContestantAction(formData: FormData) {
     
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')
+    revalidateTag('contestants')
     return { ok: true, contestant }
   } catch (error) {
     console.error('updateContestantAction error', error)
@@ -66,6 +68,7 @@ export async function deleteContestantAction(formData: FormData) {
     const result = await deleteContestant(id)
     revalidatePath('/admin/contestants')
     revalidatePath('/admin/teams')
+    revalidateTag('contestants')
     return { ok: true, result }
   } catch (error) {
     console.error('deleteContestantAction error', error)
