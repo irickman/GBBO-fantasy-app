@@ -181,16 +181,29 @@ export const blobDb = {
   },
 
   async deletePlayer(id: number): Promise<boolean> {
+    console.log('=== BLOB DB DELETE PLAYER ===')
+    console.log('Delete player ID:', id)
+    
     const data = await getData()
+    console.log('Initial players count:', data.players.length)
+    console.log('Players before deletion:', data.players.map(p => ({ id: p.id, name: p.name })))
+    
     const initialLength = data.players.length
     data.players = data.players.filter(p => p.id !== id)
     data.teams = data.teams.filter(t => t.playerId !== id)
     data.seasonTotals = data.seasonTotals.filter(s => s.playerId !== id)
     
+    console.log('Players after deletion:', data.players.length)
+    console.log('Teams after deletion:', data.teams.length)
+    console.log('Season totals after deletion:', data.seasonTotals.length)
+    
     if (data.players.length < initialLength) {
+      console.log('Player was found and removed, saving data...')
       await saveData(data)
+      console.log('Data saved successfully')
       return true
     }
+    console.log('No player was removed')
     return false
   },
 
