@@ -111,9 +111,15 @@ export default function AdminTeamsPage() {
   }
 
   const handleSaveTeam = async (playerId: number) => {
+    console.log('=== UI HANDLE SAVE TEAM ===')
+    console.log('Player ID:', playerId)
+    
     const contestantIds = selectedContestants[playerId] || []
+    console.log('Selected contestant IDs:', contestantIds)
+    console.log('Contestant IDs length:', contestantIds.length)
     
     if (contestantIds.length !== 3) {
+      console.log('Error: Must select exactly 3 contestants')
       setError('Must select exactly 3 contestants')
       return
     }
@@ -121,14 +127,21 @@ export default function AdminTeamsPage() {
     const formData = new FormData()
     formData.append('playerId', playerId.toString())
     formData.append('contestantIds', JSON.stringify(contestantIds))
+    
+    console.log('FormData entries:', Object.fromEntries(formData.entries()))
 
+    console.log('Calling updatePlayerTeamAction...')
     const result = await updatePlayerTeamAction(formData)
+    console.log('Server action result:', result)
+    
     if (result.ok) {
+      console.log('Team updated successfully, reloading data...')
       setSuccess('Team updated successfully!')
       setEditingPlayer(null)
       await loadData()
       setTimeout(() => setSuccess(''), 3000)
     } else {
+      console.log('Team update failed:', result.error)
       setError(result.error || 'Failed to update team')
     }
   }
