@@ -34,7 +34,10 @@ interface WeeklyScore {
 interface SeasonTotal {
   id: number
   playerId: number
-  totalPoints: number
+  week: number
+  contestantId: number
+  points: number
+  runningTotal: number
   lastUpdated: Date
 }
 
@@ -362,12 +365,15 @@ export const blobDb = {
   },
 
   // Season Totals
-  async createSeasonTotal(data: { playerId: number; totalPoints: number }): Promise<SeasonTotal> {
+  async createSeasonTotal(data: { playerId: number; week: number; contestantId: number; points: number; runningTotal: number }): Promise<SeasonTotal> {
     const dbData = await getData()
     const total: SeasonTotal = {
       id: dbData.nextId++,
       playerId: data.playerId,
-      totalPoints: data.totalPoints,
+      week: data.week,
+      contestantId: data.contestantId,
+      points: data.points,
+      runningTotal: data.runningTotal,
       lastUpdated: new Date()
     }
     dbData.seasonTotals.push(total)
@@ -380,14 +386,14 @@ export const blobDb = {
     return data.seasonTotals
   },
 
-  async getSeasonTotalByPlayerId(playerId: number): Promise<SeasonTotal | null> {
+  async getSeasonTotalByPlayerId(playerId: number): Promise<SeasonTotal[]> {
     const data = await getData()
-    return data.seasonTotals.find(s => s.playerId === playerId) || null
+    return data.seasonTotals.filter(s => s.playerId === playerId)
   },
 
-  async updateSeasonTotal(playerId: number, updates: { totalPoints: number }): Promise<SeasonTotal | null> {
+  async updateSeasonTotal(id: number, updates: { points?: number; runningTotal?: number }): Promise<SeasonTotal | null> {
     const data = await getData()
-    const index = data.seasonTotals.findIndex(s => s.playerId === playerId)
+    const index = data.seasonTotals.findIndex(s => s.id === id)
     if (index === -1) return null
     
     data.seasonTotals[index] = {

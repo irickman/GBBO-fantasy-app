@@ -112,30 +112,43 @@ export async function deleteWeeklyScore(id: number) {
 }
 
 // Season Totals
-export async function createSeasonTotal(data: { playerId: number; totalPoints: number }) {
+export async function createSeasonTotal(data: { playerId: number; week: number; contestantId: number; points: number; runningTotal: number }) {
   return await db.createSeasonTotal(data)
 }
 
 export async function getSeasonTotals() {
   const totals = await db.getSeasonTotals()
   const players = await db.getPlayers()
+  const contestants = await db.getContestants()
   
-  // Add player names to season totals
+  // Add player and contestant names to season totals
   return totals.map(total => {
     const player = players.find(p => p.id === total.playerId)
+    const contestant = contestants.find(c => c.id === total.contestantId)
     return {
       ...total,
-      playerName: player?.name || 'Unknown'
+      playerName: player?.name || 'Unknown',
+      contestantName: contestant?.name || 'Unknown'
     }
   })
 }
 
 export async function getSeasonTotalByPlayerId(playerId: number) {
-  return await db.getSeasonTotalByPlayerId(playerId)
+  const totals = await db.getSeasonTotalByPlayerId(playerId)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to season totals
+  return totals.map(total => {
+    const contestant = contestants.find(c => c.id === total.contestantId)
+    return {
+      ...total,
+      contestantName: contestant?.name || 'Unknown'
+    }
+  })
 }
 
-export async function updateSeasonTotal(playerId: number, updates: { totalPoints: number }) {
-  return await db.updateSeasonTotal(playerId, updates)
+export async function updateSeasonTotal(id: number, updates: { points?: number; runningTotal?: number }) {
+  return await db.updateSeasonTotal(id, updates)
 }
 
 // Validation functions
