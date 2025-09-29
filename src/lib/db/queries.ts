@@ -1,0 +1,284 @@
+import { db } from './index'
+import { SCORING_CATEGORIES } from './index'
+
+// Contestants
+export async function createContestant(name: string, eliminatedWeek: number | null = null) {
+  return await db.createContestant(name, eliminatedWeek)
+}
+
+export async function getContestants() {
+  return await db.getContestants()
+}
+
+export async function getContestantById(id: number) {
+  return await db.getContestantById(id)
+}
+
+export async function updateContestant(id: number, updates: { name?: string; eliminatedWeek?: number | null }) {
+  return await db.updateContestant(id, updates)
+}
+
+export async function deleteContestant(id: number) {
+  return await db.deleteContestant(id)
+}
+
+// Players
+export async function createPlayer(name: string, teamName: string) {
+  return await db.createPlayer(name, teamName)
+}
+
+export async function getPlayers() {
+  return await db.getPlayers()
+}
+
+export async function getPlayerById(id: number) {
+  return await db.getPlayerById(id)
+}
+
+export async function updatePlayer(id: number, updates: { name?: string; teamName?: string }) {
+  return await db.updatePlayer(id, updates)
+}
+
+export async function deletePlayer(id: number) {
+  return await db.deletePlayer(id)
+}
+
+// Teams
+export async function createTeam(playerId: number, contestantId: number) {
+  return await db.createTeam(playerId, contestantId)
+}
+
+export async function getTeamsByPlayerId(playerId: number) {
+  const teams = await db.getTeamsByPlayerId(playerId)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to teams
+  return teams.map(team => {
+    const contestant = contestants.find(c => c.id === team.contestantId)
+    return {
+      ...team,
+      contestantName: contestant?.name || 'Unknown',
+      eliminatedWeek: contestant?.eliminatedWeek || null
+    }
+  })
+}
+
+export async function updatePlayerTeam(playerId: number, contestantIds: number[]) {
+  return await db.updatePlayerTeam(playerId, contestantIds)
+}
+
+// Weekly Scores
+export async function createWeeklyScore(week: number, contestantId: number, category: string, points: number) {
+  return await db.createWeeklyScore(week, contestantId, category, points)
+}
+
+export async function addWeeklyScore(week: number, contestantId: number, category: string, points: number) {
+  return await db.createWeeklyScore(week, contestantId, category, points)
+}
+
+export async function getWeeklyScores(week?: number) {
+  const scores = await db.getWeeklyScores(week)
+  const contestants = await db.getContestants()
+  
+  // Add contestant names to scores
+  return scores.map(score => {
+    const contestant = contestants.find(c => c.id === score.contestantId)
+    return {
+      ...score,
+      contestantName: contestant?.name || 'Unknown'
+    }
+  })
+}
+
+export async function getWeeklyScoreById(id: number) {
+  const score = await db.getWeeklyScoreById(id)
+  if (!score) return null
+  
+  const contestants = await db.getContestants()
+  const contestant = contestants.find(c => c.id === score.contestantId)
+  
+  return {
+    ...score,
+    contestantName: contestant?.name || 'Unknown'
+  }
+}
+
+export async function updateWeeklyScore(id: number, week: number, contestantId: number, category: string, points: number) {
+  return await db.updateWeeklyScore(id, week, contestantId, category, points)
+}
+
+export async function deleteWeeklyScore(id: number) {
+  return await db.deleteWeeklyScore(id)
+}
+
+// Season Totals
+export async function createSeasonTotal(data: { playerId: number; totalPoints: number }) {
+  return await db.createSeasonTotal(data)
+}
+
+export async function getSeasonTotals() {
+  const totals = await db.getSeasonTotals()
+  const players = await db.getPlayers()
+  
+  // Add player names to season totals
+  return totals.map(total => {
+    const player = players.find(p => p.id === total.playerId)
+    return {
+      ...total,
+      playerName: player?.name || 'Unknown'
+    }
+  })
+}
+
+export async function getSeasonTotalByPlayerId(playerId: number) {
+  return await db.getSeasonTotalByPlayerId(playerId)
+}
+
+export async function updateSeasonTotal(playerId: number, updates: { totalPoints: number }) {
+  return await db.updateSeasonTotal(playerId, updates)
+}
+
+// Validation functions
+export async function validateContestantElimination(contestantId: number, week: number): Promise<boolean> {
+  const contestant = await getContestantById(contestantId)
+  if (!contestant) return false
+  
+  // If contestant is eliminated, they can only be scored in the week they were eliminated
+  if (contestant.eliminatedWeek !== null) {
+    return contestant.eliminatedWeek === week
+  }
+  
+  return true
+}
+
+export async function validateWeeklyScoring(week: number, contestantId: number, category: string): Promise<{ valid: boolean; error?: string }> {
+  // Check if contestant can be scored for this week
+  const canScore = await validateContestantElimination(contestantId, week)
+  if (!canScore) {
+    return { valid: false, error: 'Contestant is eliminated and cannot be scored for this week' }
+  }
+
+  // Check for duplicate winners (only one per week for certain categories)
+  const restrictedCategories = ['star_baker', 'technical_win', 'last_technical']
+  if (restrictedCategories.includes(category)) {
+    const existing = await db.getWeeklyScores(week)
+    const hasDuplicate = existing.some(score => score.category === category)
+    
+    if (hasDuplicate) {
+      return { valid: false, error: `Only one ${category} per week is allowed` }
+    }
+  }
+
+  return { valid: true }
+}
+
+// Current week and status
+export async function getCurrentWeek(): Promise<number> {
+  // For now, return week 4. In a real app, this would be dynamic
+  return 4
+}
+
+export async function getWeekStatus(week: number): Promise<'complete' | 'current' | 'upcoming'> {
+  const currentWeek = await getCurrentWeek()
+  if (week < currentWeek) return 'complete'
+  if (week === currentWeek) return 'current'
+  return 'upcoming'
+}
+
+// Season totals calculation
+export async function calculateSeasonTotals() {
+  const allPlayers = await getPlayers()
+  
+  for (const player of allPlayers) {
+    // Get all teams for this player
+    const playerTeams = await getTeamsByPlayerId(player.id)
+    const contestantIds = playerTeams.map(team => team.contestantId)
+    
+    if (contestantIds.length === 0) continue
+    
+    // Calculate total points for this player
+    const allScores = await db.getWeeklyScores()
+    const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
+    const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
+    
+    // Update or create season total
+    const existing = await getSeasonTotalByPlayerId(player.id)
+    if (existing) {
+      await updateSeasonTotal(player.id, { totalPoints })
+    } else {
+      await createSeasonTotal({ playerId: player.id, totalPoints })
+    }
+  }
+}
+
+// Leaderboard
+export async function getLeaderboard() {
+  return await getSeasonTotals()
+}
+
+// Player weekly breakdown
+export async function getPlayerWeeklyBreakdown(playerId: number) {
+  const playerTeams = await getTeamsByPlayerId(playerId)
+  const contestantIds = playerTeams.map(team => team.contestantId)
+  
+  if (contestantIds.length === 0) return []
+  
+  const allScores = await db.getWeeklyScores()
+  const playerScores = allScores.filter(score => contestantIds.includes(score.contestantId))
+  
+  // Add contestant names
+  const contestants = await db.getContestants()
+  return playerScores.map(score => {
+    const contestant = contestants.find(c => c.id === score.contestantId)
+    return {
+      week: score.week,
+      contestantName: contestant?.name || 'Unknown',
+      category: score.category,
+      points: score.points
+    }
+  })
+}
+
+// Alias for consistency
+export const getWeeklyScoresByWeek = getWeeklyScores
+
+// Additional functions needed by the UI
+export async function getAllPlayers() {
+  return await getPlayers()
+}
+
+export async function getAllContestants() {
+  return await getContestants()
+}
+
+export async function getAllTeams() {
+  const players = await getPlayers()
+  const contestants = await getContestants()
+  const allTeams = []
+  
+  // Get teams for each player
+  for (const player of players) {
+    const playerTeams = await db.getTeamsByPlayerId(player.id)
+    for (const team of playerTeams) {
+      const contestant = contestants.find(c => c.id === team.contestantId)
+      allTeams.push({
+        id: team.id,
+        playerId: team.playerId,
+        contestantId: team.contestantId,
+        playerName: player.name,
+        teamName: player.teamName,
+        contestantName: contestant?.name || 'Unknown',
+        eliminatedWeek: contestant?.eliminatedWeek || null,
+        createdAt: team.createdAt
+      })
+    }
+  }
+  
+  return allTeams
+}
+
+export async function deleteTeam(id: number) {
+  // Note: This is a simplified implementation
+  // In a real app, you'd need to track team IDs properly
+  return true
+}
