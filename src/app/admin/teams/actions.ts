@@ -35,18 +35,6 @@ export async function updatePlayerTeamAction(formData: FormData) {
       return { ok: false, error: 'Exactly 3 contestants must be selected' }
     }
 
-    // Check if any contestant is already assigned to another player
-    const allTeams = await getAllTeams()
-    for (const contestantId of selectedContestantIds) {
-      const existingAssignment = allTeams.find(team => 
-        team.contestantId === contestantId && team.playerId !== playerId
-      )
-      
-      if (existingAssignment) {
-        return { ok: false, error: `Contestant is already assigned to another player` }
-      }
-    }
-
     // Delete existing team assignments for this player
     const existingTeams = await getTeamsByPlayerId(playerId)
     for (const team of existingTeams) {

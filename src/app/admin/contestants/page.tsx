@@ -34,21 +34,15 @@ export default function AdminContestantsPage() {
 
   const loadData = async () => {
     try {
-      console.log('=== CLIENT SIDE LOAD DATA ===')
       setLoading(true)
-      console.log('Calling getAllContestantsAction...')
       const result = await getAllContestantsAction()
-      console.log('Server action result:', result)
       
       if (result.ok && result.contestants) {
-        console.log('Setting contestants:', result.contestants.length)
         setContestants(result.contestants)
       } else {
-        console.log('Error from server action:', result.error)
         setError(result.error || 'Failed to load contestants')
       }
     } catch (err) {
-      console.error('=== CLIENT SIDE LOAD DATA ERROR ===', err)
       setError('Failed to load contestants')
       console.error('loadData error', err)
     } finally {
