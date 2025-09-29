@@ -46,32 +46,47 @@ export default function AdminTeamsPage() {
   const loadData = async () => {
     try {
       setLoading(true)
+      console.log('=== UI LOAD DATA START ===')
+      
       const [playersRes, contestantsRes] = await Promise.all([
         getAllPlayersAction(),
         getAllContestantsAction()
       ])
       
+      console.log('Players response:', playersRes)
+      console.log('Contestants response:', contestantsRes)
+      
       if (playersRes.ok && playersRes.players) {
+        console.log('Setting players:', playersRes.players.length)
         setPlayers(playersRes.players)
         
         // Load teams for each player
         const teamsData: Record<number, Team[]> = {}
         for (const player of playersRes.players) {
+          console.log('Loading teams for player:', player.name, player.id)
           const teamsRes = await getPlayerTeamsAction(player.id)
+          console.log('Teams response for', player.name, ':', teamsRes)
           if (teamsRes.ok && teamsRes.teams) {
             teamsData[player.id] = teamsRes.teams
           }
         }
+        console.log('Setting player teams:', teamsData)
         setPlayerTeams(teamsData)
+      } else {
+        console.error('Players response not ok:', playersRes)
       }
       
       if (contestantsRes.ok && contestantsRes.contestants) {
+        console.log('Setting contestants:', contestantsRes.contestants.length)
         setContestants(contestantsRes.contestants)
+      } else {
+        console.error('Contestants response not ok:', contestantsRes)
       }
     } catch (err) {
-      setError('Failed to load data')
       console.error('loadData error', err)
+      setError('Failed to load data: ' + (err instanceof Error ? err.message : 'Unknown error'))
     } finally {
+      console.log('=== UI LOAD DATA END ===')
       setLoading(false)
     }
   }
