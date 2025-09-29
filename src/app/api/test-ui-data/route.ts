@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getAllPlayersAction, getAllContestantsAction } from '../admin/teams/actions'
+import { getAllPlayersAction, getAllContestantsAction } from '../../admin/teams/actions'
 
 export async function GET() {
   try {
