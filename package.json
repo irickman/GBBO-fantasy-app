@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:blob": "node --env-file=.env.local scripts/seed-blob.mjs"
   },
   "dependencies": {
     "@types/bcrypt": "^6.0.0",

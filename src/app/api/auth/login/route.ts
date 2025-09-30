@@ -11,8 +11,8 @@ export async function POST(req: Request) {
       return new Response('Bad Request', { status: 400 })
     }
 
-    // Try environment variable first, fallback to config
-    const passwordHash = process.env.AUTH_PASSWORD_HASH || authConfig.AUTH_PASSWORD_HASH
+    // Use config file since environment variable is having issues
+    const passwordHash = authConfig.AUTH_PASSWORD_HASH
     const ok = await bcrypt.compare(password, passwordHash)
     // Add jitter to prevent timing attacks
     await new Promise((r) => setTimeout(r, 400 + Math.random() * 250))

@@ -65,51 +65,61 @@ async function getData(): Promise<DatabaseData> {
   try {
     console.log('Fetching data from blob storage...')
     
-    // Use direct URL instead of listing blobs to avoid confusion
-    const dataUrl = 'https://szyuihqvww7iktlw.public.blob.vercel-storage.com/database/data.json'
-    console.log('Fetching from direct URL:', dataUrl)
+    // Use Vercel Blob API to get the data
+    const blobUrl = 'database/data.json'
+    console.log('Fetching from blob URL:', blobUrl)
     
-    const response = await fetch(dataUrl)
-    if (!response.ok) {
-      console.log('Failed to fetch data, returning default data')
+    // First, try to get the blob info to check if it exists
+    try {
+      const blobInfo = await head(blobUrl)
+      console.log('Blob exists, fetching data...')
+      
+      // Fetch the actual data
+      const response = await fetch(blobInfo.url)
+      if (!response.ok) {
+        console.log('Failed to fetch data from blob URL, returning default data')
+        return defaultData
+      }
+      
+      const data = await response.json()
+    
+      // Convert date strings back to Date objects
+      if (data.players) {
+        data.players = data.players.map((p: any) => ({
+          ...p,
+          createdAt: new Date(p.createdAt)
+        }))
+      }
+      if (data.contestants) {
+        data.contestants = data.contestants.map((c: any) => ({
+          ...c,
+          createdAt: new Date(c.createdAt)
+        }))
+      }
+      if (data.teams) {
+        data.teams = data.teams.map((t: any) => ({
+          ...t,
+          createdAt: new Date(t.createdAt)
+        }))
+      }
+      if (data.weeklyScores) {
+        data.weeklyScores = data.weeklyScores.map((s: any) => ({
+          ...s,
+          createdAt: new Date(s.createdAt)
+        }))
+      }
+      if (data.seasonTotals) {
+        data.seasonTotals = data.seasonTotals.map((s: any) => ({
+          ...s,
+          lastUpdated: new Date(s.lastUpdated)
+        }))
+      }
+      
+      return data
+    } catch (headError) {
+      console.log('Blob does not exist, returning default data')
       return defaultData
     }
-    
-    const data = await response.json()
-    
-    // Convert date strings back to Date objects
-    if (data.players) {
-      data.players = data.players.map((p: any) => ({
-        ...p,
-        createdAt: new Date(p.createdAt)
-      }))
-    }
-    if (data.contestants) {
-      data.contestants = data.contestants.map((c: any) => ({
-        ...c,
-        createdAt: new Date(c.createdAt)
-      }))
-    }
-    if (data.teams) {
-      data.teams = data.teams.map((t: any) => ({
-        ...t,
-        createdAt: new Date(t.createdAt)
-      }))
-    }
-    if (data.weeklyScores) {
-      data.weeklyScores = data.weeklyScores.map((s: any) => ({
-        ...s,
-        createdAt: new Date(s.createdAt)
-      }))
-    }
-    if (data.seasonTotals) {
-      data.seasonTotals = data.seasonTotals.map((s: any) => ({
-        ...s,
-        lastUpdated: new Date(s.lastUpdated)
-      }))
-    }
-    
-    return data
   } catch (error) {
     console.error('Error fetching data from blob storage:', error)
     return defaultData
@@ -135,7 +145,6 @@ async function saveData(data: DatabaseData): Promise<void> {
     })
     
     console.log('Data saved to blob storage successfully:', result.url)
-    console.log('Expected URL should be: https://szyuihqvww7iktlw.public.blob.vercel-storage.com/database/data.json')
   } catch (error) {
     console.error('Error saving data to blob storage:', error)
     throw error
@@ -346,9 +355,16 @@ export const blobDb = {
   },
 
   async getWeeklyScores(week?: number): Promise<WeeklyScore[]> {
+    console.log('=== BLOB DB GET WEEKLY SCORES ===')
+    console.log('Week filter:', week)
     const data = await getData()
+    console.log('Total weekly scores in data:', data.weeklyScores.length)
+    console.log('Weekly scores:', data.weeklyScores)
+    
     if (week !== undefined) {
-      return data.weeklyScores.filter(s => s.week === week)
+      const filtered = data.weeklyScores.filter(s => s.week === week)
+      console.log(`Filtered scores for week ${week}:`, filtered)
+      return filtered
     }
     return data.weeklyScores
   },

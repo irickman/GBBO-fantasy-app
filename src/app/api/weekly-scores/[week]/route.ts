@@ -7,6 +7,7 @@ export async function GET(
 ) {
   try {
     const week = parseInt(params.week)
+    
     if (isNaN(week) || week < 1 || week > 10) {
       return NextResponse.json({ error: 'Invalid week number' }, { status: 400 })
     }

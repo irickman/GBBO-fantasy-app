@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
+// Contestants data
 const contestants = [
   { name: 'Aaron', eliminatedWeek: null },
   { name: 'Iain', eliminatedWeek: null },
@@ -16,6 +17,7 @@ const contestants = [
   { name: 'Leighton', eliminatedWeek: 2 }
 ]
 
+// Players data
 const players = [
   { name: 'Aleta', teamName: 'The Baking Beauties', contestants: ['Jessika', 'Aaron', 'Pui Man'] },
   { name: 'Alex', teamName: 'The Flour Power', contestants: ['Jessika', 'Lesley', 'Toby'] },
@@ -36,7 +38,7 @@ const players = [
 
 export async function POST() {
   try {
-    console.log('Starting complete data upload...')
+    console.log('Starting production data upload...')
     
     // Clear existing data
     console.log('Clearing existing data...')
@@ -49,8 +51,12 @@ export async function POST() {
       console.log(`✓ Created contestant: ${contestant.name}${contestant.eliminatedWeek ? ` (eliminated week ${contestant.eliminatedWeek})` : ''}`)
     }
     
+    // Wait a moment for contestants to be created
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
     // Get all contestants to map names to IDs
     const allContestants = await db.getContestants()
+    console.log('Created contestants:', allContestants.map(c => c.name))
     const contestantMap = new Map(allContestants.map(c => [c.name, c.id]))
     
     // Upload players and their teams
@@ -74,21 +80,21 @@ export async function POST() {
       console.log(`  ✓ Assigned contestants: ${player.contestants.join(', ')}`)
     }
     
-    console.log('\n🎉 Data upload completed successfully!')
+    console.log('\n🎉 Production data upload completed successfully!')
     console.log(`📊 Uploaded ${contestants.length} contestants and ${players.length} players`)
     
-    return NextResponse.json({
-      success: true,
-      message: 'Complete data upload successful',
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Production data uploaded successfully',
       contestants: contestants.length,
       players: players.length
     })
     
   } catch (error) {
-    console.error('❌ Error during data upload:', error)
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+    console.error('❌ Error during production data upload:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : String(error) 
     }, { status: 500 })
   }
 }
