@@ -280,56 +280,49 @@ export async function getLeaderboard() {
 
 // Leaderboard as of a specific week
 export async function getLeaderboardAsOfWeek(week: number) {
-  console.log('getLeaderboardAsOfWeek called for week:', week)
-  
-  const allPlayers = await getPlayers()
-  const allScores = await db.getWeeklyScores()
-  
-  console.log('Found players:', allPlayers.length, 'Found scores:', allScores.length)
-  
-  // Filter scores up to the specified week
-  const scoresUpToWeek = allScores.filter(score => score.week <= week)
-  console.log('Scores up to week', week, ':', scoresUpToWeek.length)
-  
-  const leaderboard = []
-  
-  for (const player of allPlayers) {
-    // Get all teams for this player
-    const playerTeams = await getTeamsByPlayerId(player.id)
-    const contestantIds = playerTeams.map(team => team.contestantId)
+  try {
+    const allPlayers = await getPlayers()
+    const allScores = await db.getWeeklyScores()
     
-    if (contestantIds.length === 0) {
-      console.log('Player', player.name, 'has no teams, skipping')
-      continue
+    // Filter scores up to the specified week
+    const scoresUpToWeek = allScores.filter(score => score.week <= week)
+    
+    const leaderboard = []
+    
+    for (const player of allPlayers) {
+      // Get all teams for this player
+      const playerTeams = await getTeamsByPlayerId(player.id)
+      const contestantIds = playerTeams.map(team => team.contestantId)
+      
+      if (contestantIds.length === 0) continue
+      
+      // Calculate total points for this player up to the specified week
+      const playerScores = scoresUpToWeek.filter(score => 
+        contestantIds.includes(score.contestantId)
+      )
+      const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
+      
+      // Include all players, regardless of points (including 0 or negative)
+      leaderboard.push({
+        id: player.id,
+        playerId: player.id,
+        playerName: player.name,
+        teamName: player.teamName,
+        totalPoints,
+        week,
+        contestantId: 0,
+        points: 0,
+        runningTotal: totalPoints,
+        lastUpdated: new Date()
+      })
     }
     
-    // Calculate total points for this player up to the specified week
-    const playerScores = scoresUpToWeek.filter(score => 
-      contestantIds.includes(score.contestantId)
-    )
-    const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
-    
-    console.log('Player', player.name, 'has', totalPoints, 'points')
-    
-    // Include all players, regardless of points (including 0 or negative)
-    leaderboard.push({
-      id: player.id,
-      playerId: player.id,
-      playerName: player.name,
-      teamName: player.teamName,
-      totalPoints,
-      week,
-      contestantId: 0,
-      points: 0,
-      runningTotal: totalPoints,
-      lastUpdated: new Date()
-    })
+    // Sort by total points descending
+    return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)
+  } catch (error) {
+    console.error('Error in getLeaderboardAsOfWeek:', error)
+    throw error
   }
-  
-  console.log('Final leaderboard has', leaderboard.length, 'players')
-  
-  // Sort by total points descending
-  return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)
 }
 
 // Player weekly breakdown
