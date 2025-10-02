@@ -1,9 +1,21 @@
 import { NextResponse } from 'next/server'
-import { getPlayers, getContestants } from '@/lib/db/queries'
+import { getPlayers, getContestants, getCurrentWeek } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const asOfWeekParam = searchParams.get('asOfWeek')
+    
+    let asOfWeek: number | null = null
+    if (asOfWeekParam) {
+      const parsedWeek = parseInt(asOfWeekParam, 10)
+      const currentWeek = await getCurrentWeek()
+      if (parsedWeek > 0 && parsedWeek <= currentWeek) {
+        asOfWeek = parsedWeek
+      }
+    }
+    
     const players = await getPlayers()
     const contestants = await getContestants()
     const allTeams = []
@@ -13,6 +25,14 @@ export async function GET() {
       const playerTeams = await db.getTeamsByPlayerId(player.id)
       for (const team of playerTeams) {
         const contestant = contestants.find(c => c.id === team.contestantId)
+        
+        // Adjust elimination status based on asOfWeek
+        let eliminatedWeek = contestant?.eliminatedWeek || null
+        if (asOfWeek !== null && eliminatedWeek !== null && eliminatedWeek > asOfWeek) {
+          // This elimination hasn't happened yet in the selected week
+          eliminatedWeek = null
+        }
+        
         allTeams.push({
           teamId: team.id,
           playerId: team.playerId,
@@ -20,7 +40,7 @@ export async function GET() {
           teamName: player.teamName,
           contestantId: team.contestantId,
           contestantName: contestant?.name || 'Unknown',
-          eliminatedWeek: contestant?.eliminatedWeek || null
+          eliminatedWeek
         })
       }
     }

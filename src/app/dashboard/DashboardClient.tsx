@@ -52,13 +52,21 @@ export default function DashboardPage() {
   const [playerDetails, setPlayerDetails] = useState<Record<number, any>>({})
   const [showAdminMenu, setShowAdminMenu] = useState(false)
   const [currentWeek, setCurrentWeek] = useState(2)
+  const [selectedWeek, setSelectedWeek] = useState(2)
   const [weekStatus, setWeekStatus] = useState<any>(null)
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set())
 
-  // Load data
+  // Load data initially
   useEffect(() => {
     loadData()
   }, [])
+  
+  // Reload data when selected week changes
+  useEffect(() => {
+    if (currentWeek > 0) {
+      loadData(selectedWeek)
+    }
+  }, [selectedWeek])
 
   // Close admin menu when clicking outside
   useEffect(() => {
@@ -74,13 +82,15 @@ export default function DashboardPage() {
     }
   }, [showAdminMenu])
 
-  const loadData = async () => {
+  const loadData = async (asOfWeek?: number) => {
     try {
       setLoading(true)
+      const weekParam = asOfWeek ? `?asOfWeek=${asOfWeek}` : ''
+      
       const [leaderboardRes, currentWeekRes, teamsRes, weeklyScoresRes] = await Promise.all([
-        fetch('/api/leaderboard').then(r => r.json()),
+        fetch(`/api/leaderboard${weekParam}`).then(r => r.json()),
         fetch('/api/current-week').then(r => r.json()),
-        fetch('/api/teams').then(r => r.json()),
+        fetch(`/api/teams${weekParam}`).then(r => r.json()),
         fetch('/api/weekly-scores').then(r => r.json())
       ])
       
@@ -89,11 +99,18 @@ export default function DashboardPage() {
       }
       
       if (currentWeekRes.currentWeek) {
-        setCurrentWeek(currentWeekRes.currentWeek)
+        const currentWeekNum = currentWeekRes.currentWeek
+        setCurrentWeek(currentWeekNum)
         setWeekStatus(currentWeekRes.weekStatus)
         
-        // Load scores for the current week
-        const weekScoresRes = await fetch(`/api/weekly-scores/${currentWeekRes.currentWeek}`).then(r => r.json())
+        // Initialize selectedWeek to currentWeek on first load
+        if (!asOfWeek) {
+          setSelectedWeek(currentWeekNum)
+        }
+        
+        // Load scores for the selected week
+        const targetWeek = asOfWeek || currentWeekNum
+        const weekScoresRes = await fetch(`/api/weekly-scores/${targetWeek}`).then(r => r.json())
         if (weekScoresRes.scores) {
           setWeek3Scores(weekScoresRes.scores)
         }
@@ -247,6 +264,40 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Week Selector */}
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <div className="flex items-center gap-3 bg-white rounded-lg shadow-md p-4 border-2 border-amber-200">
+              <label htmlFor="week-selector" className="text-amber-900 font-semibold">
+                View Week:
+              </label>
+              <select
+                id="week-selector"
+                value={selectedWeek}
+                onChange={(e) => setSelectedWeek(parseInt(e.target.value, 10))}
+                className="bg-amber-50 border-2 border-amber-300 text-amber-900 font-semibold rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+              >
+                {Array.from({ length: currentWeek }, (_, i) => i + 1).map((week) => (
+                  <option key={week} value={week}>
+                    Week {week}{week === currentWeek ? ' (Current)' : ''}
+                  </option>
+                ))}
+              </select>
+              {selectedWeek < currentWeek && (
+                <>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-300">
+                    📅 Historical View
+                  </span>
+                  <button
+                    onClick={() => setSelectedWeek(currentWeek)}
+                    className="text-sm bg-amber-600 hover:bg-amber-700 text-white font-medium px-3 py-1 rounded-md transition-colors"
+                  >
+                    Jump to Current
+                  </button>
+                </>
               )}
             </div>
           </div>

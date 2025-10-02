@@ -278,6 +278,50 @@ export async function getLeaderboard() {
   }))
 }
 
+// Leaderboard as of a specific week
+export async function getLeaderboardAsOfWeek(week: number) {
+  const allPlayers = await getPlayers()
+  const allScores = await db.getWeeklyScores()
+  
+  // Filter scores up to the specified week
+  const scoresUpToWeek = allScores.filter(score => score.week <= week)
+  
+  const leaderboard = []
+  
+  for (const player of allPlayers) {
+    // Get all teams for this player
+    const playerTeams = await getTeamsByPlayerId(player.id)
+    const contestantIds = playerTeams.map(team => team.contestantId)
+    
+    if (contestantIds.length === 0) continue
+    
+    // Calculate total points for this player up to the specified week
+    const playerScores = scoresUpToWeek.filter(score => 
+      contestantIds.includes(score.contestantId)
+    )
+    const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
+    
+    // Only include players with points
+    if (totalPoints > 0) {
+      leaderboard.push({
+        id: player.id,
+        playerId: player.id,
+        playerName: player.name,
+        teamName: player.teamName,
+        totalPoints,
+        week,
+        contestantId: 0,
+        points: 0,
+        runningTotal: totalPoints,
+        lastUpdated: new Date()
+      })
+    }
+  }
+  
+  // Sort by total points descending
+  return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)
+}
+
 // Player weekly breakdown
 export async function getPlayerWeeklyBreakdown(playerId: number) {
   const playerTeams = await getTeamsByPlayerId(playerId)
