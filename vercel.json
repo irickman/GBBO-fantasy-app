@@ -2,6 +2,9 @@
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 10
+    },
+    "src/app/api/reset-database/route.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [

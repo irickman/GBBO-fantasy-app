@@ -2,20 +2,22 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getIronSession } from 'iron-session'
 
+// Force Edge Runtime
+export const runtime = 'edge'
+
 // Public paths that don't require authentication
 const PUBLIC_PATHS = ['/login']
 
 // Path prefixes that should be excluded from auth checks  
-const EXCLUDED_PREFIXES = ['/_next', '/favicon.ico', '/static']
-
-// Auth API routes that should be accessible without authentication
-const PUBLIC_API_PATHS = ['/api/auth/login', '/api/auth/logout']
+const EXCLUDED_PREFIXES = ['/_next', '/favicon.ico', '/static', '/api/auth/login', '/api/auth/logout']
 
 // Get session configuration from environment variables
 // Fallback to defaults for local development
 // CRITICAL: Trim values to remove any accidental whitespace/newlines
 const IRON_SESSION_COOKIE_NAME = (process.env.IRON_SESSION_COOKIE_NAME || 'gbbo_session').trim()
 const IRON_SESSION_PASSWORD = (process.env.IRON_SESSION_PASSWORD || 'gbbo-fantasy-league-secret-key-32chars').trim()
+
+console.log('[MIDDLEWARE] Initializing with cookie:', IRON_SESSION_COOKIE_NAME)
 
 const sessionOptions = {
   cookieName: IRON_SESSION_COOKIE_NAME,
