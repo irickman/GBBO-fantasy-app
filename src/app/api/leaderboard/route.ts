@@ -19,6 +19,15 @@ export async function GET(request: Request) {
           console.log('Calling getLeaderboardAsOfWeek for week:', asOfWeek)
           leaderboard = await getLeaderboardAsOfWeek(asOfWeek)
           console.log('Historical leaderboard returned:', leaderboard.length, 'players')
+          
+          // If we get fewer than 15 players, something is wrong
+          if (leaderboard.length < 15) {
+            console.log('WARNING: Historical leaderboard has only', leaderboard.length, 'players, expected 15')
+            // Let's return a simple test to confirm the API path is working
+            leaderboard = [
+              { id: 999, playerId: 999, playerName: 'HISTORICAL_TEST', teamName: 'Test Team', totalPoints: 0, week: asOfWeek, contestantId: 0, points: 0, runningTotal: 0, lastUpdated: new Date() }
+            ]
+          }
         } catch (error) {
           console.error('Error in getLeaderboardAsOfWeek, falling back to current:', error)
           leaderboard = await getLeaderboard()
