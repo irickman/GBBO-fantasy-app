@@ -192,9 +192,9 @@ export async function validateWeeklyScoring(week: number, contestantId: number, 
 
 // Current week and status
 export async function getCurrentWeek(): Promise<number> {
-  // Season started on September 27, 2025 (Friday) - Week 1
+  // Season started on August 30, 2025 (Friday) - Week 1
   // Each week resets on Friday
-  const seasonStartDate = new Date('2025-09-27') // Week 1 start
+  const seasonStartDate = new Date('2025-08-30') // Week 1 start
   const now = new Date()
   
   // Calculate the number of days since season start
@@ -270,7 +270,12 @@ export async function calculateSeasonTotals() {
 
 // Leaderboard
 export async function getLeaderboard() {
-  return await getSeasonTotals()
+  const seasonTotals = await getSeasonTotals()
+  // Map to the expected leaderboard format with totalPoints field
+  return seasonTotals.map(total => ({
+    ...total,
+    totalPoints: total.runningTotal
+  }))
 }
 
 // Player weekly breakdown
