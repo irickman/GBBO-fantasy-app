@@ -202,7 +202,7 @@ export default function AdminContestantsPage() {
               <span className="text-sm">— Elimination status shown as of this week</span>
             </div>
             <Link
-              href="/admin/contestants"
+              href="/dashboard"
               className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1 rounded-md transition-colors text-sm"
             >
               View Current
