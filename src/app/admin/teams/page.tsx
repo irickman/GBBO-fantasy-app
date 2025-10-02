@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createPlayerAction, updatePlayerTeamAction, getAllPlayersAction, getAllContestantsAction, getPlayerTeamsAction, deletePlayerAction } from './actions'
+import { createPlayerAction, updatePlayerTeamAction, getAllPlayersAction, getAllContestantsAction, getPlayerTeamsAction, deletePlayerAction, updatePlayerAction } from './actions'
 
 interface Player {
   id: number
@@ -34,9 +34,11 @@ export default function AdminTeamsPage() {
   // Form states
   const [showAddPlayer, setShowAddPlayer] = useState(false)
   const [editingPlayer, setEditingPlayer] = useState<number | null>(null)
+  const [editingTeamName, setEditingTeamName] = useState<number | null>(null)
   const [newPlayerName, setNewPlayerName] = useState('')
   const [newPlayerTeamName, setNewPlayerTeamName] = useState('')
   const [selectedContestants, setSelectedContestants] = useState<Record<number, number[]>>({})
+  const [editingTeamNameValue, setEditingTeamNameValue] = useState('')
 
   // Load data
   useEffect(() => {
@@ -164,6 +166,39 @@ export default function AdminTeamsPage() {
   const handleCancelEdit = () => {
     setEditingPlayer(null)
     setSelectedContestants({})
+  }
+
+  const handleEditTeamName = (playerId: number, currentTeamName: string) => {
+    setEditingTeamName(playerId)
+    setEditingTeamNameValue(currentTeamName)
+  }
+
+  const handleSaveTeamName = async (playerId: number) => {
+    if (!editingTeamNameValue.trim()) {
+      setError('Team name cannot be empty')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('id', playerId.toString())
+    formData.append('name', players.find(p => p.id === playerId)?.name || '')
+    formData.append('teamName', editingTeamNameValue.trim())
+
+    const result = await updatePlayerAction(formData)
+    if (result.ok) {
+      setSuccess('Team name updated successfully!')
+      setEditingTeamName(null)
+      setEditingTeamNameValue('')
+      await loadData()
+      setTimeout(() => setSuccess(''), 3000)
+    } else {
+      setError(result.error || 'Failed to update team name')
+    }
+  }
+
+  const handleCancelTeamNameEdit = () => {
+    setEditingTeamName(null)
+    setEditingTeamNameValue('')
   }
 
   const handleDeletePlayer = async (playerId: number) => {
@@ -320,15 +355,55 @@ export default function AdminTeamsPage() {
           {players.map(player => {
             const teams = playerTeams[player.id] || []
             const isEditing = editingPlayer === player.id
+            const isEditingTeamName = editingTeamName === player.id
             const selected = selectedContestants[player.id] || []
             const availableContestants = getAvailableContestants(player.id)
 
             return (
               <div key={player.id} className="bg-white rounded-lg shadow-lg p-6">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
-                  <h3 className="text-lg sm:text-xl font-semibold text-amber-900">
-                    {player.name} - {player.teamName}
-                  </h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    <span className="text-lg sm:text-xl font-semibold text-amber-900">
+                      {player.name}
+                    </span>
+                    <span className="text-amber-600">-</span>
+                    {isEditingTeamName ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editingTeamNameValue}
+                          onChange={(e) => setEditingTeamNameValue(e.target.value)}
+                          className="px-2 py-1 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-lg font-semibold text-amber-900"
+                          placeholder="Team name"
+                          autoFocus
+                        />
+                        <button
+                          onClick={() => handleSaveTeamName(player.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded-md transition-colors text-sm"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={handleCancelTeamNameEdit}
+                          className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded-md transition-colors text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg font-semibold text-amber-900">
+                          {player.teamName}
+                        </span>
+                        <button
+                          onClick={() => handleEditTeamName(player.id, player.teamName)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded-md transition-colors text-sm"
+                        >
+                          ✏️
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {isEditing ? (
                       <>
