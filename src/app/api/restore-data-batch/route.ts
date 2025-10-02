@@ -134,7 +134,7 @@ export async function POST(request: Request) {
 
 async function createPlayerBatch(players: typeof PLAYERS) {
   // Get all contestants for mapping
-  const allContestants = await db.getAllContestants()
+  const allContestants = await db.getContestants()
   const contestantMap = new Map<string, number>()
   for (const c of allContestants) {
     contestantMap.set(c.name, c.id)
