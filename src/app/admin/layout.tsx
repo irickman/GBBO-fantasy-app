@@ -1,14 +1,17 @@
 import { redirect } from 'next/navigation'
 import { authGuard } from '@/lib/auth'
-import LeaderboardClient from './LeaderboardClient'
 
-export default async function LeaderboardPage() {
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const isAuthenticated = await authGuard()
   
   if (!isAuthenticated) {
     redirect('/login')
   }
   
-  return <LeaderboardClient />
+  return <>{children}</>
 }
 
