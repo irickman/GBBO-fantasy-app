@@ -22,14 +22,21 @@ export default async function RootLayout({
 }) {
   // Get current pathname from headers
   const headersList = headers()
-  const pathname = headersList.get('x-pathname') || headersList.get('referer')?.split('//')[1]?.split('/').slice(1).join('/') || '/'
+  const pathname = headersList.get('x-pathname') || '/'
+  
+  console.log('[LAYOUT] Checking auth for pathname:', pathname)
   
   // Only check auth for non-public paths
-  const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(path))
+  const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith('/login')
+  
+  console.log('[LAYOUT] Is public path:', isPublicPath)
   
   if (!isPublicPath) {
     const isAuthenticated = await authGuard()
+    console.log('[LAYOUT] Is authenticated:', isAuthenticated)
+    
     if (!isAuthenticated) {
+      console.log('[LAYOUT] Redirecting to /login')
       redirect('/login')
     }
   }
