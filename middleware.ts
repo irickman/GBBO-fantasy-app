@@ -17,8 +17,6 @@ const EXCLUDED_PREFIXES = ['/_next', '/favicon.ico', '/static', '/api/auth/login
 const IRON_SESSION_COOKIE_NAME = (process.env.IRON_SESSION_COOKIE_NAME || 'gbbo_session').trim()
 const IRON_SESSION_PASSWORD = (process.env.IRON_SESSION_PASSWORD || 'gbbo-fantasy-league-secret-key-32chars').trim()
 
-console.log('[MIDDLEWARE] Initializing with cookie:', IRON_SESSION_COOKIE_NAME)
-
 const sessionOptions = {
   cookieName: IRON_SESSION_COOKIE_NAME,
   password: IRON_SESSION_PASSWORD,
@@ -33,18 +31,13 @@ const sessionOptions = {
 export async function middleware(req: NextRequest) {
   const url = new URL(req.url)
   
-  // Skip auth check for excluded paths (Next.js internals, static files)
+  // Skip auth check for excluded paths (Next.js internals, static files, auth APIs)
   if (EXCLUDED_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
     return NextResponse.next()
   }
   
-  // Skip auth check for public paths
+  // Skip auth check for public paths (login page)
   if (PUBLIC_PATHS.includes(url.pathname)) {
-    return NextResponse.next()
-  }
-  
-  // Skip auth check for public API paths
-  if (PUBLIC_API_PATHS.includes(url.pathname)) {
     return NextResponse.next()
   }
   
