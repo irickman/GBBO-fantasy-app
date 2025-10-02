@@ -197,7 +197,8 @@ export default function DashboardPage() {
 
   const getAllWeeks = () => {
     const weeks = []
-    for (let week = 2; week <= currentWeek; week++) {
+    // Only show weeks up to the selected week
+    for (let week = 2; week <= selectedWeek; week++) {
       weeks.push(week)
     }
     return weeks.sort((a, b) => b - a) // Most recent first
@@ -256,7 +257,7 @@ export default function DashboardPage() {
                       Manage Teams
                     </Link>
                     <Link
-                      href="/admin/contestants"
+                      href={`/admin/contestants?week=${selectedWeek}`}
                       className="block px-4 py-2 text-sm text-amber-700 hover:bg-amber-50"
                       onClick={() => setShowAdminMenu(false)}
                     >

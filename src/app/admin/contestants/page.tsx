@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
   getAllContestantsAction, 
@@ -16,6 +17,10 @@ interface Contestant {
 }
 
 export default function AdminContestantsPage() {
+  const searchParams = useSearchParams()
+  const weekParam = searchParams.get('week')
+  const selectedWeek = weekParam ? parseInt(weekParam, 10) : null
+  
   const [contestants, setContestants] = useState<Contestant[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -38,7 +43,20 @@ export default function AdminContestantsPage() {
       const result = await getAllContestantsAction()
       
       if (result.ok && result.contestants) {
-        setContestants(result.contestants)
+        let contestantsList = result.contestants
+        
+        // Adjust elimination status if viewing historical week
+        if (selectedWeek !== null) {
+          contestantsList = contestantsList.map(contestant => ({
+            ...contestant,
+            eliminatedWeek: 
+              contestant.eliminatedWeek && contestant.eliminatedWeek > selectedWeek
+                ? null
+                : contestant.eliminatedWeek
+          }))
+        }
+        
+        setContestants(contestantsList)
       } else {
         setError(result.error || 'Failed to load contestants')
       }
@@ -175,6 +193,22 @@ export default function AdminContestantsPage() {
             </div>
           </div>
         </div>
+
+        {selectedWeek !== null && (
+          <div className="bg-blue-100 border border-blue-400 text-blue-800 px-4 py-3 rounded mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📅</span>
+              <span className="font-semibold">Historical View: Week {selectedWeek}</span>
+              <span className="text-sm">— Elimination status shown as of this week</span>
+            </div>
+            <Link
+              href="/admin/contestants"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1 rounded-md transition-colors text-sm"
+            >
+              View Current
+            </Link>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
