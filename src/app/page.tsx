@@ -5,3 +5,4 @@ export default function Home() {
   // Force deployment
   redirect('/login')
 }
+// Force redeploy - middleware fully removed
