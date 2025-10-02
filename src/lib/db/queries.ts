@@ -192,8 +192,19 @@ export async function validateWeeklyScoring(week: number, contestantId: number, 
 
 // Current week and status
 export async function getCurrentWeek(): Promise<number> {
-  // For now, return week 4. In a real app, this would be dynamic
-  return 4
+  // Season started on September 27, 2025 (Friday) - Week 1
+  // Each week resets on Friday
+  const seasonStartDate = new Date('2025-09-27') // Week 1 start
+  const now = new Date()
+  
+  // Calculate the number of days since season start
+  const daysSinceStart = Math.floor((now.getTime() - seasonStartDate.getTime()) / (1000 * 60 * 60 * 24))
+  
+  // Calculate which week we're in (7 days per week, starting from Week 1)
+  const weekNumber = Math.floor(daysSinceStart / 7) + 1
+  
+  // Cap at Week 10 (maximum)
+  return Math.min(weekNumber, 10)
 }
 
 export async function getWeekStatus(week: number): Promise<'complete' | 'current' | 'upcoming'> {
