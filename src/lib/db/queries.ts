@@ -280,11 +280,16 @@ export async function getLeaderboard() {
 
 // Leaderboard as of a specific week
 export async function getLeaderboardAsOfWeek(week: number) {
+  console.log('getLeaderboardAsOfWeek called for week:', week)
+  
   const allPlayers = await getPlayers()
   const allScores = await db.getWeeklyScores()
   
+  console.log('Found players:', allPlayers.length, 'Found scores:', allScores.length)
+  
   // Filter scores up to the specified week
   const scoresUpToWeek = allScores.filter(score => score.week <= week)
+  console.log('Scores up to week', week, ':', scoresUpToWeek.length)
   
   const leaderboard = []
   
@@ -293,13 +298,18 @@ export async function getLeaderboardAsOfWeek(week: number) {
     const playerTeams = await getTeamsByPlayerId(player.id)
     const contestantIds = playerTeams.map(team => team.contestantId)
     
-    if (contestantIds.length === 0) continue
+    if (contestantIds.length === 0) {
+      console.log('Player', player.name, 'has no teams, skipping')
+      continue
+    }
     
     // Calculate total points for this player up to the specified week
     const playerScores = scoresUpToWeek.filter(score => 
       contestantIds.includes(score.contestantId)
     )
     const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
+    
+    console.log('Player', player.name, 'has', totalPoints, 'points')
     
     // Include all players, regardless of points (including 0 or negative)
     leaderboard.push({
@@ -315,6 +325,8 @@ export async function getLeaderboardAsOfWeek(week: number) {
       lastUpdated: new Date()
     })
   }
+  
+  console.log('Final leaderboard has', leaderboard.length, 'players')
   
   // Sort by total points descending
   return leaderboard.sort((a, b) => b.totalPoints - a.totalPoints)

@@ -11,10 +11,15 @@ export async function GET(request: Request) {
       const asOfWeek = parseInt(asOfWeekParam, 10)
       const currentWeek = await getCurrentWeek()
       
+      console.log('Historical view requested:', { asOfWeek, currentWeek })
+      
       // Validate week is within range
       if (asOfWeek > 0 && asOfWeek <= currentWeek) {
+        console.log('Calling getLeaderboardAsOfWeek for week:', asOfWeek)
         leaderboard = await getLeaderboardAsOfWeek(asOfWeek)
+        console.log('Historical leaderboard returned:', leaderboard.length, 'players')
       } else {
+        console.log('Invalid week, using current leaderboard')
         // Invalid week, use current
         leaderboard = await getLeaderboard()
       }
