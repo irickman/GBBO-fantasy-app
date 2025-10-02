@@ -35,3 +35,4 @@ export async function getCurrentWeek(): Promise<{ index: IndexDoc; week: WeekDoc
 
   return { index, week };
 }
+
