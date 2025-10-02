@@ -1,14 +1,14 @@
-// Vercel Blob storage database connection
-import { blobDb } from './blob-storage'
+// Prisma database connection
+import { prismaDb } from './prisma-db'
 
-// Export the blob database as the main database
-export const db = blobDb
+// Export the Prisma database as the main database
+export const db = prismaDb
 
 // Database initialization function
 export async function initializeDatabase() {
   try {
     // Seed default data
-    await blobDb.seedDefaultData()
+    await prismaDb.seedDefaultData()
     console.log('Database initialized with default data')
   } catch (error) {
     console.error('Database initialization error:', error)

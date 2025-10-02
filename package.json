@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "seed:blob": "node --env-file=.env.local scripts/seed-blob.mjs"
+    "seed:blob": "node --env-file=.env.local scripts/seed-blob.mjs",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^5.7.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
@@ -28,7 +30,8 @@
   },
   "devDependencies": {
     "eslint": "^8.0.0",
-    "eslint-config-next": "14.0.4"
+    "eslint-config-next": "14.0.4",
+    "prisma": "^5.7.0"
   },
   "engines": {
     "node": ">=18.20.8"

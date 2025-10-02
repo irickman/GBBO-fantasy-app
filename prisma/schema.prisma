@@ -1,0 +1,73 @@
+// Prisma schema for GBBO Fantasy League
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id          Int           @id @default(autoincrement())
+  name        String
+  teamName    String        @map("team_name")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  
+  teams       Team[]
+  seasonTotals SeasonTotal[]
+
+  @@map("players")
+}
+
+model Contestant {
+  id             Int      @id @default(autoincrement())
+  name           String   @unique
+  eliminatedWeek Int?     @map("eliminated_week")
+  createdAt      DateTime @default(now()) @map("created_at")
+  
+  teams         Team[]
+  weeklyScores  WeeklyScore[]
+
+  @@map("contestants")
+}
+
+model Team {
+  id            Int      @id @default(autoincrement())
+  playerId      Int      @map("player_id")
+  contestantId  Int      @map("contestant_id")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  contestant Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  @@map("teams")
+}
+
+model WeeklyScore {
+  id            Int      @id @default(autoincrement())
+  week          Int
+  contestantId  Int      @map("contestant_id")
+  category      String
+  points        Float
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  contestant Contestant @relation(fields: [contestantId], references: [id], onDelete: Cascade)
+
+  @@map("weekly_scores")
+}
+
+model SeasonTotal {
+  id          Int      @id @default(autoincrement())
+  playerId    Int      @unique @map("player_id")
+  totalPoints Float    @default(0) @map("total_points")
+  lastUpdated DateTime @default(now()) @map("last_updated")
+  
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("season_totals")
+}
+
