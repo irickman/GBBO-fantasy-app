@@ -31,50 +31,38 @@ const sessionOptions = {
 export async function middleware(req: NextRequest) {
   const url = new URL(req.url)
   
+  // Create response and inject pathname into headers so layout can read it
+  const response = NextResponse.next()
+  response.headers.set('x-pathname', url.pathname)
+  
   // Skip auth check for excluded paths (Next.js internals, static files, auth APIs)
   if (EXCLUDED_PREFIXES.some(prefix => url.pathname.startsWith(prefix))) {
-    return NextResponse.next()
+    return response
   }
   
-  // Skip auth check for public paths (login page)
+  // Skip auth check for public paths (login page) 
   if (PUBLIC_PATHS.includes(url.pathname)) {
-    return NextResponse.next()
+    return response
   }
   
-  // Check authentication using iron-session directly with request/response
+  // Auth check for API routes only (pages protected in layout.tsx)
   const isApiRoute = url.pathname.startsWith('/api')
   
-  try {
-    const response = NextResponse.next()
-    const session = await getIronSession(req, response, sessionOptions)
-    const isAuthenticated = Boolean((session as any).auth?.loggedIn)
-    
-    if (!isAuthenticated) {
-      // For API routes, return 401 Unauthorized
-      if (isApiRoute) {
+  if (isApiRoute) {
+    try {
+      const session = await getIronSession(req, response, sessionOptions)
+      const isAuthenticated = Boolean((session as any).auth?.loggedIn)
+      
+      if (!isAuthenticated) {
         return new NextResponse('Unauthorized', { status: 401 })
       }
-      
-      // For pages, redirect to login with return URL
-      const loginUrl = new URL('/login', url.origin)
-      loginUrl.searchParams.set('from', url.pathname)
-      return NextResponse.redirect(loginUrl)
-    }
-    
-    return response
-  } catch (error) {
-    console.error('Middleware auth error:', error)
-    
-    // On error, return appropriate response
-    if (isApiRoute) {
+    } catch (error) {
+      console.error('Middleware API auth error:', error)
       return new NextResponse('Unauthorized', { status: 401 })
     }
-    
-    // For pages, redirect to login
-    const loginUrl = new URL('/login', url.origin)
-    loginUrl.searchParams.set('from', url.pathname)
-    return NextResponse.redirect(loginUrl)
   }
+  
+  return response
 }
 
 export const config = {
