@@ -8,13 +8,18 @@ export async function GET(request: Request) {
     
     let leaderboard
     if (asOfWeekParam) {
+      console.log('asOfWeekParam found:', asOfWeekParam)
       const asOfWeek = parseInt(asOfWeekParam, 10)
+      console.log('Parsed asOfWeek:', asOfWeek)
+      
       const currentWeek = await getCurrentWeek()
+      console.log('Current week:', currentWeek)
       
       console.log('Historical view requested:', { asOfWeek, currentWeek })
       
       // Validate week is within range
       if (asOfWeek > 0 && asOfWeek <= currentWeek) {
+        console.log('Week validation passed, entering historical branch')
         try {
           console.log('Calling getLeaderboardAsOfWeek for week:', asOfWeek)
           leaderboard = await getLeaderboardAsOfWeek(asOfWeek)
