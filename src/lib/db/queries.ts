@@ -301,21 +301,19 @@ export async function getLeaderboardAsOfWeek(week: number) {
     )
     const totalPoints = playerScores.reduce((sum, score) => sum + score.points, 0)
     
-    // Only include players with points
-    if (totalPoints > 0) {
-      leaderboard.push({
-        id: player.id,
-        playerId: player.id,
-        playerName: player.name,
-        teamName: player.teamName,
-        totalPoints,
-        week,
-        contestantId: 0,
-        points: 0,
-        runningTotal: totalPoints,
-        lastUpdated: new Date()
-      })
-    }
+    // Include all players, regardless of points (including 0 or negative)
+    leaderboard.push({
+      id: player.id,
+      playerId: player.id,
+      playerName: player.name,
+      teamName: player.teamName,
+      totalPoints,
+      week,
+      contestantId: 0,
+      points: 0,
+      runningTotal: totalPoints,
+      lastUpdated: new Date()
+    })
   }
   
   // Sort by total points descending
