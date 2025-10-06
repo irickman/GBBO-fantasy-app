@@ -425,7 +425,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-semibold text-amber-900 mb-4">📊 Weekly Scoreboard</h2>
             
-            <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
+            <div className="max-h-[600px] overflow-y-auto space-y-3 pr-2">
               {getAllWeeks().map(week => {
                 const isExpanded = expandedWeeks.has(week)
                 const hasScores = hasScoresForWeek(week)

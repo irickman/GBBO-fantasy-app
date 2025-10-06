@@ -38,8 +38,10 @@ export default function AdminScoringPage() {
   const [weeklyScores, setWeeklyScores] = useState<WeeklyScore[]>([])
   const [currentWeek, setCurrentWeek] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 })
   
   // Form state for Every Week categories
   const [everyWeekScores, setEveryWeekScores] = useState<Record<string, number>>({})
@@ -57,9 +59,13 @@ export default function AdminScoringPage() {
     loadData()
   }, [currentWeek])
 
-  const loadData = async () => {
+  const loadData = async (showLoadingIndicator = true) => {
     try {
-      setLoading(true)
+      if (showLoadingIndicator) {
+        setLoading(true)
+      }
+      setError('')
+      
       const [contestantsRes, scoresRes] = await Promise.all([
         getContestantsAction(),
         getWeeklyScoresAction(currentWeek)
@@ -67,16 +73,22 @@ export default function AdminScoringPage() {
       
       if (contestantsRes.ok) {
         setContestants(contestantsRes.contestants || [])
+      } else {
+        console.error('Failed to load contestants:', contestantsRes.error)
       }
       
       if (scoresRes.ok) {
         setWeeklyScores(scoresRes.scores || [])
+      } else {
+        console.error('Failed to load scores:', scoresRes.error)
       }
     } catch (err) {
-      setError('Failed to load data')
+      setError('Failed to load data: ' + (err instanceof Error ? err.message : 'Unknown error'))
       console.error('loadData error', err)
     } finally {
-      setLoading(false)
+      if (showLoadingIndicator) {
+        setLoading(false)
+      }
     }
   }
 
@@ -84,49 +96,73 @@ export default function AdminScoringPage() {
     try {
       setError('')
       setSuccess('')
+      setSaving(true)
       
-      // Save Every Week categories
+      // Calculate total scores to save for progress tracking
+      const everyWeekCount = Object.values(everyWeekScores).filter(id => id).length
+      const optionalCount = Object.values(optionalScores).reduce((total, ids) => total + ids.length, 0)
+      const totalScores = everyWeekCount + optionalCount
+      
+      if (totalScores === 0) {
+        setError('Please select at least one score to save')
+        setSaving(false)
+        return
+      }
+      
+      setSaveProgress({ current: 0, total: totalScores })
+      
+      // Collect all scores to save
+      const scoresToSave: Array<{category: string, contestantId: number}> = []
+      
+      // Add Every Week categories
       for (const [category, contestantId] of Object.entries(everyWeekScores)) {
         if (contestantId) {
-          const formData = new FormData()
-          formData.append('week', currentWeek.toString())
-          formData.append('category', category)
-          formData.append('contestantId', contestantId.toString())
-          
-          const result = await addScoreAction(formData)
-          if (!result.ok) {
-            setError(result.error || 'Failed to save scores')
-            return
-          }
+          scoresToSave.push({ category, contestantId })
         }
       }
       
-      // Save Optional categories
+      // Add Optional categories
       for (const [category, contestantIds] of Object.entries(optionalScores)) {
         for (const contestantId of contestantIds) {
-          const formData = new FormData()
-          formData.append('week', currentWeek.toString())
-          formData.append('category', category)
-          formData.append('contestantId', contestantId.toString())
-          
-          const result = await addScoreAction(formData)
-          if (!result.ok) {
-            setError(result.error || 'Failed to save scores')
-            return
-          }
+          scoresToSave.push({ category, contestantId })
         }
       }
       
-      setSuccess('Scores saved successfully!')
-      await loadData()
-      // Clear form
+      // Save scores with progress tracking
+      for (let i = 0; i < scoresToSave.length; i++) {
+        const { category, contestantId } = scoresToSave[i]
+        setSaveProgress({ current: i + 1, total: totalScores })
+        
+        const formData = new FormData()
+        formData.append('week', currentWeek.toString())
+        formData.append('category', category)
+        formData.append('contestantId', contestantId.toString())
+        
+        const result = await addScoreAction(formData)
+        if (!result.ok) {
+          setError(`${result.error || 'Failed to save scores'} (Score ${i + 1}/${totalScores})`)
+          setSaving(false)
+          return
+        }
+      }
+      
+      setSuccess(`Successfully saved ${totalScores} scores!`)
+      
+      // Clear form immediately for better UX
       setEveryWeekScores({})
       setOptionalScores({})
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000)
+      
+      // Reload data to show updated scores (without loading indicator to preserve success message)
+      await loadData(false)
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(''), 5000)
     } catch (err) {
-      setError('Failed to save scores')
+      setError('Failed to save scores: ' + (err instanceof Error ? err.message : 'Unknown error'))
       console.error('handleSaveScores error', err)
+    } finally {
+      setSaving(false)
+      setSaveProgress({ current: 0, total: 0 })
     }
   }
 
@@ -328,10 +364,37 @@ export default function AdminScoringPage() {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <button
               onClick={handleSaveScores}
-              className="w-full bg-amber-600 text-white py-3 px-6 rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 text-lg font-semibold"
+              disabled={saving}
+              className={`w-full py-3 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-lg font-semibold transition-colors ${
+                saving 
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+                  : 'bg-amber-600 text-white hover:bg-amber-700'
+              }`}
             >
-              Save Week {currentWeek} Scores
+              {saving ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>
+                    Saving... ({saveProgress.current}/{saveProgress.total})
+                  </span>
+                </div>
+              ) : (
+                `Save Week ${currentWeek} Scores`
+              )}
             </button>
+            {saving && saveProgress.total > 0 && (
+              <div className="mt-3">
+                <div className="bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(saveProgress.current / saveProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-600 mt-1 text-center">
+                  Saving score {saveProgress.current} of {saveProgress.total}...
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
