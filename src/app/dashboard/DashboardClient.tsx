@@ -310,7 +310,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8 h-full min-h-[600px]">
           {/* Current Leaderboard */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-2xl font-semibold text-amber-900 mb-4">🏆 Current Standings</h2>
@@ -422,10 +422,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Weekly Scoreboard */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-2xl font-semibold text-amber-900 mb-4">📊 Weekly Scoreboard</h2>
+          <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col h-full">
+            <h2 className="text-2xl font-semibold text-amber-900 mb-4 flex-shrink-0">📊 Weekly Scoreboard</h2>
             
-            <div className="max-h-[600px] overflow-y-auto space-y-3 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
               {getAllWeeks().map(week => {
                 const isExpanded = expandedWeeks.has(week)
                 const hasScores = hasScoresForWeek(week)
