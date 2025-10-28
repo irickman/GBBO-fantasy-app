@@ -35,3 +35,6 @@ This is a Next.js monorepo using pnpm workspaces. Frontend in /apps/web, backend
 - Title format: [<project>] <Title>
 
 - Always run pnpm lint and pnpm test before committing
+
+## Notes
+Each time you are working, use nvm, it will have the right node version
