@@ -1,14 +1,14 @@
-// Prisma database connection
-import { prismaDb } from './prisma-db'
+// Turso database connection with Drizzle ORM
+import { tursoDb } from './turso-db'
 
-// Export the Prisma database as the main database
-export const db = prismaDb
+// Export the Turso database as the main database
+export const db = tursoDb
 
 // Database initialization function
 export async function initializeDatabase() {
   try {
     // Seed default data
-    await prismaDb.seedDefaultData()
+    await tursoDb.seedDefaultData()
     console.log('Database initialized with default data')
   } catch (error) {
     console.error('Database initialization error:', error)

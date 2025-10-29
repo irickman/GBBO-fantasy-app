@@ -4,13 +4,18 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed:blob": "node --env-file=.env.local scripts/seed-blob.mjs",
-    "postinstall": "prisma generate"
+    "db:generate": "node --env-file=.env.local node_modules/.bin/drizzle-kit generate",
+    "db:push": "node --env-file=.env.local node_modules/.bin/drizzle-kit push",
+    "db:migrate": "node --env-file=.env.local --import tsx scripts/migrate.ts",
+    "db:seed": "node --env-file=.env.local --import tsx scripts/seed-turso.ts",
+    "db:studio": "node --env-file=.env.local node_modules/.bin/drizzle-kit studio",
+    "seed:blob": "node --env-file=.env.local scripts/seed-blob.mjs"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "@prisma/client": "^5.7.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20.10.0",
@@ -19,6 +24,7 @@
     "@vercel/blob": "^0.20.0",
     "autoprefixer": "^10.4.0",
     "bcryptjs": "^3.0.2",
+    "drizzle-orm": "^0.44.7",
     "iron-session": "^8.0.4",
     "next": "14.0.4",
     "postcss": "^8.4.0",
@@ -29,9 +35,12 @@
     "typescript": "^5.3.0"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.31.6",
     "eslint": "^8.0.0",
     "eslint-config-next": "14.0.4",
-    "prisma": "^5.7.0"
+    "node-loader": "^2.1.0",
+    "prisma": "^5.7.0",
+    "tsx": "^4.20.6"
   },
   "engines": {
     "node": ">=18.20.8"
